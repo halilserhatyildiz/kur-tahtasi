@@ -501,6 +501,30 @@
     margin-top:4px;
   }
 
+  .whatif-results{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:12px;
+  }
+  .whatif-card{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+  }
+  .whatif-card.wide{grid-column:1 / -1;}
+  .whatif-label{font-size:10.5px; color:var(--text-lo); margin-bottom:4px;}
+  .whatif-value{
+    font-family:'Space Mono',monospace;
+    font-size:17px;
+    font-weight:700;
+    color:var(--text-hi);
+  }
+  .whatif-value.up{color:var(--green);}
+  .whatif-value.down{color:var(--red);}
+  .whatif-sub{font-size:11px; color:var(--text-lo); margin-top:2px;}
+
   .compare-intro{
     font-size:12px;
     color:var(--text-lo);
@@ -651,13 +675,39 @@
     transition:width 1.3s ease;
   }
 
+  .chooser-bg-lines{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    opacity:0.22;
+    pointer-events:none;
+    z-index:0;
+  }
+  .bg-line{
+    position:absolute;
+    left:0;
+    width:200%;
+    height:60px;
+  }
+  .line-a{animation:scrollLeft 22s linear infinite;}
+  .line-b{animation:scrollLeft 28s linear infinite reverse;}
+  .line-c{animation:scrollLeft 34s linear infinite;}
+  .line-d{animation:scrollLeft 19s linear infinite reverse;}
+  @keyframes scrollLeft{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
   .chooser-title{
+    position:relative;
+    z-index:1;
     font-size:22px;
     font-weight:700;
     color:var(--text-hi);
     text-align:center;
   }
   .chooser-sub{
+    position:relative;
+    z-index:1;
     font-size:13px;
     color:var(--text-lo);
     text-align:center;
@@ -666,6 +716,8 @@
     max-width:280px;
   }
   .chooser-cards{
+    position:relative;
+    z-index:1;
     display:flex;
     flex-direction:column;
     gap:14px;
@@ -733,6 +785,12 @@
   </div>
 
   <div id="chooserScreen" style="opacity:0; pointer-events:none;">
+    <div class="chooser-bg-lines">
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:12%;" class="bg-line line-a"><polyline points="0,40 20,38 40,44 60,30 80,35 100,20 120,28 140,15 160,22 180,10 200,18 220,8 240,20 260,12 280,25 300,18 320,30 340,22 360,35 380,28 400,38" fill="none" stroke="#00D26A" stroke-width="1.5"/><polyline points="400,40 420,38 440,44 460,30 480,35 500,20 520,28 540,15 560,22 580,10 600,18 620,8 640,20 660,12 680,25 700,18 720,30 740,22 760,35 780,28 800,38" fill="none" stroke="#00D26A" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:38%;" class="bg-line line-b"><polyline points="0,15 20,22 40,10 60,25 80,18 100,32 120,20 140,38 160,28 180,42 200,30 220,45 240,32 260,40 280,25 300,38 320,20 340,32 360,15 380,28 400,18" fill="none" stroke="#FFB020" stroke-width="1.5"/><polyline points="400,15 420,22 440,10 460,25 480,18 500,32 520,20 540,38 560,28 580,42 600,30 620,45 640,32 660,40 680,25 700,38 720,20 740,32 760,15 780,28 800,18" fill="none" stroke="#FFB020" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:64%;" class="bg-line line-c"><polyline points="0,30 20,35 40,20 60,28 80,15 100,25 120,10 140,22 160,8 180,18 200,30 220,12 240,25 260,18 280,32 300,20 320,28 340,15 360,25 380,10 400,22" fill="none" stroke="#00D26A" stroke-width="1.5"/><polyline points="400,30 420,35 440,20 460,28 480,15 500,25 520,10 540,22 560,8 580,18 600,30 620,12 640,25 660,18 680,32 700,20 720,28 740,15 760,25 780,10 800,22" fill="none" stroke="#00D26A" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:86%;" class="bg-line line-d"><polyline points="0,20 20,10 40,25 60,15 80,30 100,18 120,35 140,22 160,40 180,28 200,15 220,32 240,20 260,38 280,25 300,10 320,28 340,18 360,32 380,20 400,35" fill="none" stroke="#FFB020" stroke-width="1.5"/><polyline points="400,20 420,10 440,25 460,15 480,30 500,18 520,35 540,22 560,40 580,28 600,15 620,32 640,20 660,38 680,25 700,10 720,28 740,18 760,32 780,20 800,35" fill="none" stroke="#FFB020" stroke-width="1.5"/></svg>
+    </div>
     <div class="chooser-title">Ne yapmak istiyorsun?</div>
     <div class="chooser-sub">Önce hangi tarafa bakmak istersin, istediğin zaman değiştirebilirsin.</div>
     <div class="chooser-cards">
@@ -748,6 +806,13 @@
         <div>
           <div class="chooser-card-title">Kripto Takibi</div>
           <div class="chooser-card-desc">Bitcoin, Ethereum ve 28 altcoin</div>
+        </div>
+      </div>
+      <div class="chooser-card gold" id="chooseGold">
+        <div class="chooser-icon">🥇</div>
+        <div>
+          <div class="chooser-card-title">Altın Takibi</div>
+          <div class="chooser-card-desc">Gram, Çeyrek, Tam, Ons Altın ve Gümüş</div>
         </div>
       </div>
     </div>
@@ -773,6 +838,7 @@
     <div class="status-chips">
       <span class="status-chip" id="fiatStatusChip"><span class="dot-sm"></span>DÖVİZ</span>
       <span class="status-chip" id="cryptoStatusChip"><span class="dot-sm"></span>KRİPTO</span>
+      <span class="status-chip" id="goldStatusChip"><span class="dot-sm"></span>ALTIN</span>
     </div>
     <button class="refresh-btn" id="refreshBtn" aria-label="Yenile">↻</button>
   </div>
@@ -781,12 +847,29 @@
   <div class="tabs">
     <button class="tab-btn active" id="tabFiat">DÖVİZ</button>
     <button class="tab-btn" id="tabCrypto">KRİPTO</button>
+    <button class="tab-btn" id="tabGold">ALTIN</button>
   </div>
 
   <div class="board" id="board">
     <div class="empty" style="padding:24px;">Yükleniyor…</div>
   </div>
   <div class="detail-panel" id="detailPanel"></div>
+
+  <div class="section-title">GEÇMİŞTE NE OLURDU?</div>
+  <div class="card">
+    <div class="compare-intro" id="whatifAssetLabel">Yukarıdan bir kur/coin seç, o varlık üzerinden hesaplayalım.</div>
+    <div class="conv-row">
+      <input type="number" id="whatifAmount" value="1000" inputmode="decimal">
+      <span class="compare-try-label" id="whatifUnitLabel">USD</span>
+    </div>
+    <div class="chart-toggle" id="whatifPeriods" style="margin-top:10px;">
+      <button data-days="30" class="">1A</button>
+      <button data-days="180" class="">6A</button>
+      <button data-days="365" class="active">1Y</button>
+      <button data-days="1825" class="">5Y</button>
+    </div>
+    <div class="whatif-results" id="whatifResults"></div>
+  </div>
 
   <div class="section-title">ÇEVİRİCİ</div>
   <div class="card">
@@ -859,7 +942,7 @@
   </div>
 
   <div class="footnote">
-    <b>Not:</b> Döviz kurları Avrupa Merkez Bankası referans verisine dayanır ve iş günlerinde günde bir kez güncellenir — anlık banka/dövizci kuru değildir, bu yüzden dövizde 1 saatlik değişim "—" görünür. Kripto fiyatları piyasadan dakikada bir çekilir ve gerçek zamanlıya yakındır, 1 saatlik değişim de gösterilir. Gösterilen değerler orta piyasa fiyatıdır. Rus Rublesi ve Tayvan Doları için ücretsiz veri kaynağımızda kur bulunmuyor, bu ikisi "veri yok" olarak görünür. Bir satıra dokunarak güncel değeri ve değişim yüzdelerini görebilirsin.
+    <b>Not:</b> Döviz kurları Avrupa Merkez Bankası referans verisine dayanır ve iş günlerinde günde bir kez güncellenir — anlık banka/dövizci kuru değildir, bu yüzden dövizde 1 saatlik değişim "—" görünür. Kripto fiyatları piyasadan dakikada bir çekilir ve gerçek zamanlıya yakındır, 1 saatlik değişim de gösterilir. Gösterilen değerler orta piyasa fiyatıdır. Rus Rublesi ve Tayvan Doları için ücretsiz veri kaynağımızda kur bulunmuyor, bu ikisi "veri yok" olarak görünür. Bir satıra dokunarak güncel değeri ve değişim yüzdelerini görebilirsin. Altın bölümündeki Gram ve Ons fiyatları gerçek piyasa verisidir; Çeyrek/Yarım/Tam/Cumhuriyet altını ise standart ağırlık üzerinden hesaplanan yaklaşık değerlerdir, kuyumcu işçilik farkı fiyata dahil değildir.
   </div>
 
   </div>
@@ -933,6 +1016,18 @@
     { code:'ARB', name:'Arbitrum', icon:'🔵', id:'arbitrum' }
   ];
 
+  // Ağırlıklar (gram) standart darphane değerleridir, 22 ayar gram fiyatı üzerinden hesaplanır.
+  // Gerçek kuyumcu alış/satış fiyatı işçilik/darphane farkı nedeniyle bundan sapabilir — "yaklaşık" olarak işaretliyoruz.
+  const GOLD = [
+    { code:'GRAM', name:'Gram Altın (24 ayar)', icon:'🟡' },
+    { code:'CEYREK', name:'Çeyrek Altın (yaklaşık)', icon:'🥇', approx:true, weight:1.75 },
+    { code:'YARIM', name:'Yarım Altın (yaklaşık)', icon:'🥇', approx:true, weight:3.5 },
+    { code:'TAM', name:'Tam Altın (yaklaşık)', icon:'🥇', approx:true, weight:7.0 },
+    { code:'CUMHURIYET', name:'Cumhuriyet Altını (yaklaşık)', icon:'🥇', approx:true, weight:7.216 },
+    { code:'ONS', name:'Ons Altın (XAU)', icon:'🌕' },
+    { code:'GUMUS', name:'Gümüş (gram)', icon:'⚪' }
+  ];
+
   let rates = { TRY: 1 };
   let prevRates = {};
   let changes = {};
@@ -940,6 +1035,7 @@
   let chartRange = '7';
   let fiatOk = false;
   let cryptoOk = false;
+  let goldOk = false;
   let alarms = [];
   let convHistory = [];
   let activeTab = 'fiat';
@@ -950,8 +1046,10 @@
   const refreshBtn = document.getElementById('refreshBtn');
   const fiatStatusChip = document.getElementById('fiatStatusChip');
   const cryptoStatusChip = document.getElementById('cryptoStatusChip');
+  const goldStatusChip = document.getElementById('goldStatusChip');
   const tabFiat = document.getElementById('tabFiat');
   const tabCrypto = document.getElementById('tabCrypto');
+  const tabGold = document.getElementById('tabGold');
   const fromSelect = document.getElementById('fromSelect');
   const toSelect = document.getElementById('toSelect');
   const amountFrom = document.getElementById('amountFrom');
@@ -971,7 +1069,7 @@
   const compareResults = document.getElementById('compareResults');
   const toast = document.getElementById('toast');
 
-  const COMPARE_DEFAULTS = { fiat: ['USD','EUR','GBP'], crypto: ['BTC','ETH','SOL'] };
+  const COMPARE_DEFAULTS = { fiat: ['USD','EUR','GBP'], crypto: ['BTC','ETH','SOL'], gold: ['GRAM','ONS','GUMUS'] };
   let compareCodes = [...COMPARE_DEFAULTS.fiat];
 
   function showToast(msg){
@@ -981,11 +1079,13 @@
   }
 
   function currentAssetList(){
-    return activeTab === 'fiat' ? FIAT : CRYPTO;
+    if(activeTab === 'fiat') return FIAT;
+    if(activeTab === 'crypto') return CRYPTO;
+    return GOLD;
   }
   function findAsset(code){
     if(code === 'TRY') return TRY_ASSET;
-    return FIAT.find(c=>c.code===code) || CRYPTO.find(c=>c.code===code);
+    return FIAT.find(c=>c.code===code) || CRYPTO.find(c=>c.code===code) || GOLD.find(c=>c.code===code);
   }
   function renderBadge(asset){
     if(!asset) return '·';
@@ -1089,6 +1189,7 @@
     compareCodes = [...COMPARE_DEFAULTS[tab]];
     tabFiat.classList.toggle('active', tab === 'fiat');
     tabCrypto.classList.toggle('active', tab === 'crypto');
+    tabGold.classList.toggle('active', tab === 'gold');
     refreshScopedSelects();
     fillCompareSelects();
     renderBoard();
@@ -1097,9 +1198,13 @@
     renderCompare();
     renderAlarms();
     renderAlarmCurrentRate();
+    renderWhatifHead();
+    computeWhatIf();
   }
   function currentAssetListFor(tab){
-    return tab === 'fiat' ? FIAT : CRYPTO;
+    if(tab === 'fiat') return FIAT;
+    if(tab === 'crypto') return CRYPTO;
+    return GOLD;
   }
 
   // CoinGecko artık anonim istekleri sık sık engelliyor/kısıtlıyor.
@@ -1173,6 +1278,46 @@
     }
   }
 
+  // GoldAPI.io ücretsiz Demo plan: goldapi.io/dashboard adresinden Google ile giriş yapıp
+  // ücretsiz anahtar alabilirsin (kart istemiyor, ayda 500 istek). Aşağıya yapıştır.
+  const GOLDAPI_KEY = '';
+  const GRAM_PER_OUNCE = 31.1035;
+
+  async function fetchGold(){
+    if(!GOLDAPI_KEY){ goldOk = false; return; }
+    try{
+      const usdTry = rates['USD'];
+      if(!usdTry) throw new Error('usd rate not ready');
+      const [xauRes, xagRes] = await Promise.all([
+        fetch('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': GOLDAPI_KEY } }),
+        fetch('https://www.goldapi.io/api/XAG/USD', { headers: { 'x-access-token': GOLDAPI_KEY } })
+      ]);
+      if(!xauRes.ok || !xagRes.ok) throw new Error('goldapi failed');
+      const xau = await xauRes.json();
+      const xag = await xagRes.json();
+
+      const gram24kUsd = xau.price_gram_24k;
+      const gram22kUsd = xau.price_gram_22k;
+      const ounceUsd = xau.price;
+      const silverGramUsd = xag.price / GRAM_PER_OUNCE;
+
+      const setRate = (code, usdVal) => {
+        prevRates[code] = rates[code];
+        rates[code] = usdVal * usdTry;
+      };
+
+      setRate('GRAM', gram24kUsd);
+      setRate('ONS', ounceUsd);
+      setRate('GUMUS', silverGramUsd);
+      GOLD.filter(g => g.approx).forEach(g => setRate(g.code, gram22kUsd * g.weight));
+
+      goldOk = true;
+    }catch(err){
+      goldOk = false;
+    }
+  }
+
+
   let lastFetchTime = null;
   let secondsUntilNext = 60;
 
@@ -1194,10 +1339,14 @@
   async function fetchRates(){
     refreshBtn.classList.add('spinning');
     prevRates = { ...rates };
-    await Promise.allSettled([fetchFiat(), fetchCrypto()]);
+    const cryptoPromise = fetchCrypto();
+    await fetchFiat();
+    const goldPromise = fetchGold();
+    await Promise.allSettled([cryptoPromise, goldPromise]);
 
     fiatStatusChip.className = 'status-chip ' + (fiatOk ? 'ok' : 'fail');
     cryptoStatusChip.className = 'status-chip ' + (cryptoOk ? 'ok' : 'fail');
+    goldStatusChip.className = 'status-chip ' + (goldOk ? 'ok' : 'fail');
     lastFetchTime = new Date();
     secondsUntilNext = 60;
     renderStatusText();
@@ -1266,7 +1415,8 @@
     const decimals = val >= 100 ? 2 : 4;
     const ch = changes[selectedCode] || {};
     const ranges = chartRangesFor(selectedCode);
-    if(!ranges.some(r => r.key === chartRange)) chartRange = ranges[0].key;
+    const hasChart = ranges.length > 0;
+    if(hasChart && !ranges.some(r => r.key === chartRange)) chartRange = ranges[0].key;
     if(!customStartStr || !customEndStr){
       const end = new Date();
       const start = new Date(end);
@@ -1274,6 +1424,7 @@
       customEndStr = end.toISOString().slice(0, 10);
       customStartStr = start.toISOString().slice(0, 10);
     }
+    const approxNote = c.approx ? `<div class="empty" style="text-align:left; padding:0 0 10px;">Bu değer standart ${c.weight}g ağırlık üzerinden hesaplanan <b style="color:var(--text-label);">yaklaşık</b> bir değerdir; kuyumcu işçilik/darphane farkı nedeniyle gerçek alış-satış fiyatından sapabilir.</div>` : '';
     detailPanel.innerHTML = `
       <div class="detail-head">
         <div class="badge">${renderBadge(c)}</div>
@@ -1283,12 +1434,14 @@
         </div>
       </div>
       <div class="detail-value" id="detailValueNum">${val.toLocaleString('tr-TR', {maximumFractionDigits:decimals})} <span style="font-size:14px; color:var(--text-lo); font-weight:400;">TRY</span></div>
+      ${approxNote}
       <div class="detail-changes">
         ${renderChangeChip('1S', ch.h1)}
         ${renderChangeChip('1G', ch.d1)}
         ${renderChangeChip('1H', ch.w1)}
         ${renderChangeChip('1A', ch.m1)}
       </div>
+      ${hasChart ? `
       <div class="chart-toggle">
         ${ranges.map(r => `<button data-range="${r.key}" class="${r.key === chartRange ? 'active' : ''}">${r.label}</button>`).join('')}
       </div>
@@ -1300,15 +1453,16 @@
       </div>
       <div class="chart-area" id="detailChartArea">
         <div class="empty" style="padding:30px 0;">Grafik yükleniyor…</div>
-      </div>
+      </div>` : `<div class="empty" style="padding:16px 0 4px;">Altın için grafik yakında eklenecek.</div>`}
     `;
     const dv = document.getElementById('detailValueNum');
     dv.classList.add('pulse');
     setTimeout(()=> dv.classList.remove('pulse'), 180);
-    loadChart(selectedCode);
+    if(hasChart) loadChart(selectedCode);
   }
 
   function chartRangesFor(code){
+    if(GOLD.some(c => c.code === code)) return [];
     const isCrypto = CRYPTO.some(c => c.code === code);
     const base = isCrypto
       ? [{key:'1', label:'24S'}, {key:'7', label:'7G'}, {key:'30', label:'1A'}]
@@ -1350,6 +1504,104 @@
       v: 1 / data.rates[date][code]
     }));
   }
+
+  async function getHistoricalRate(code, daysAgo){
+    const isCrypto = CRYPTO.some(c => c.code === code);
+    const asset = findAsset(code);
+    const target = new Date();
+    target.setDate(target.getDate() - daysAgo);
+    const from = new Date(target); from.setDate(from.getDate() - 4);
+    const to = new Date(target); to.setDate(to.getDate() + 4);
+    const points = isCrypto
+      ? await fetchCryptoChartRange(asset.id, from, to)
+      : await fetchFiatChartRange(code, from, to);
+    if(!points.length) throw new Error('no historical data');
+    let closest = points[0];
+    let minDiff = Math.abs(closest.t - target.getTime());
+    points.forEach(p=>{
+      const diff = Math.abs(p.t - target.getTime());
+      if(diff < minDiff){ minDiff = diff; closest = p; }
+    });
+    return closest.v;
+  }
+
+  const PERIOD_LABELS = { '30':'1 ay', '180':'6 ay', '365':'1 yıl', '1825':'5 yıl' };
+  let whatifDays = '365';
+  let whatifRequestId = 0;
+
+  function renderWhatifHead(){
+    const label = document.getElementById('whatifAssetLabel');
+    const unit = document.getElementById('whatifUnitLabel');
+    if(!label || !unit) return;
+    if(!selectedCode || GOLD.some(g => g.code === selectedCode)){
+      label.textContent = 'Bu hesaplama şu an döviz ve kripto için çalışıyor, altın için yakında.';
+      unit.textContent = '—';
+      return;
+    }
+    const c = findAsset(selectedCode);
+    label.textContent = `${c.code} biriminden ne kadar alsaydın, geçmişte ve bugün ne ederdi, hesaplayalım.`;
+    unit.textContent = c.code;
+  }
+
+  async function computeWhatIf(){
+    const resultsEl = document.getElementById('whatifResults');
+    if(!resultsEl) return;
+    if(!selectedCode || GOLD.some(g => g.code === selectedCode)){
+      resultsEl.innerHTML = '';
+      return;
+    }
+    const amount = parseFloat(document.getElementById('whatifAmount').value) || 0;
+    if(amount <= 0){ resultsEl.innerHTML = ''; return; }
+    const code = selectedCode;
+    const days = parseInt(whatifDays, 10);
+    const myRequestId = ++whatifRequestId;
+    resultsEl.innerHTML = '<div class="empty" style="padding:16px 0;">Hesaplanıyor…</div>';
+    try{
+      const pastRate = await getHistoricalRate(code, days);
+      const currentRate = rates[code];
+      if(myRequestId !== whatifRequestId) return; // kullanıcı bu sırada değiştirdi
+      if(currentRate === undefined) throw new Error('current rate missing');
+      const pastValue = amount * pastRate;
+      const currentValue = amount * currentRate;
+      const gain = currentValue - pastValue;
+      const gainPct = pastValue !== 0 ? (gain / pastValue) * 100 : 0;
+      const gainClass = gain > 0 ? 'up' : (gain < 0 ? 'down' : '');
+      const gainSign = gain > 0 ? '+' : '';
+      const periodLabel = PERIOD_LABELS[whatifDays] || '';
+      resultsEl.innerHTML = `
+        <div class="whatif-card">
+          <div class="whatif-label">${periodLabel} önce öderdin</div>
+          <div class="whatif-value">${pastValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+        </div>
+        <div class="whatif-card">
+          <div class="whatif-label">Bugün değeri</div>
+          <div class="whatif-value">${currentValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+        </div>
+        <div class="whatif-card wide">
+          <div class="whatif-label">Kazanç / Kayıp</div>
+          <div class="whatif-value ${gainClass}">${gainSign}${gain.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY <span style="font-size:12px;">(${gainSign}${gainPct.toFixed(1)}%)</span></div>
+          <div class="whatif-sub">${amount.toLocaleString('tr-TR')} ${code}, ${periodLabel} önce alınıp bugün elde tutulsaydı</div>
+        </div>
+      `;
+    }catch(err){
+      if(myRequestId !== whatifRequestId) return;
+      resultsEl.innerHTML = '<div class="empty" style="padding:16px 0;">Bu tarih için veri alınamadı, tekrar dene.</div>';
+    }
+  }
+
+  let whatifTimer = null;
+  document.getElementById('whatifAmount').addEventListener('input', ()=>{
+    clearTimeout(whatifTimer);
+    whatifTimer = setTimeout(computeWhatIf, 600);
+  });
+  document.getElementById('whatifPeriods').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    whatifDays = btn.dataset.days;
+    document.querySelectorAll('#whatifPeriods button').forEach(b => b.classList.toggle('active', b === btn));
+    computeWhatIf();
+  });
+
 
   async function loadChart(code){
     const isCrypto = CRYPTO.some(c => c.code === code);
@@ -1527,6 +1779,8 @@
     selectedCode = chip.dataset.code;
     renderBoard();
     renderDetailPanel();
+    renderWhatifHead();
+    computeWhatIf();
   });
 
   function round(n){
@@ -1708,6 +1962,7 @@
 
   tabFiat.addEventListener('click', ()=> setTab('fiat'));
   tabCrypto.addEventListener('click', ()=> setTab('crypto'));
+  tabGold.addEventListener('click', ()=> setTab('gold'));
   refreshBtn.addEventListener('click', fetchRates);
 
   amountFrom.addEventListener('input', ()=>{ renderConverter(); scheduleLogConversion(); });
@@ -1783,6 +2038,7 @@
   }
   document.getElementById('chooseFiat').addEventListener('click', ()=> enterApp('fiat'));
   document.getElementById('chooseCrypto').addEventListener('click', ()=> enterApp('crypto'));
+  document.getElementById('chooseGold').addEventListener('click', ()=> enterApp('gold'));
 
   async function init(){
     refreshScopedSelects();
