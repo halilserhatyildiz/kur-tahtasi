@@ -153,6 +153,9 @@
     background:var(--amber);
     color:#231600;
   }
+  .tab-btn-nav{
+    color:var(--amber);
+  }
 
   .board{
     margin-top:10px;
@@ -525,6 +528,53 @@
   .whatif-value.down{color:var(--red);}
   .whatif-sub{font-size:11px; color:var(--text-lo); margin-top:2px;}
 
+  .whatif-hero{
+    text-align:center;
+    padding:6px 0 18px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:14px;
+  }
+  .whatif-hero-label{font-size:11.5px; color:var(--text-lo); margin-bottom:6px;}
+  .whatif-hero-value{
+    font-family:'Space Mono',monospace;
+    font-size:30px;
+    font-weight:700;
+    color:var(--text-hi);
+  }
+  .whatif-hero-value.up{color:var(--green);}
+  .whatif-hero-value.down{color:var(--red);}
+  .whatif-hero-pct{
+    display:inline-block;
+    margin-top:6px;
+    font-size:13px;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:20px;
+    background:var(--panel-2);
+  }
+  .whatif-hero-pct.up{color:var(--green);}
+  .whatif-hero-pct.down{color:var(--red);}
+  .whatif-subrow{
+    display:flex;
+    gap:8px;
+  }
+  .whatif-stat{
+    flex:1;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    text-align:center;
+  }
+  .whatif-stat-label{font-size:10.5px; color:var(--text-lo); margin-bottom:4px;}
+  .whatif-stat-value{
+    font-family:'Space Mono',monospace;
+    font-size:15px;
+    font-weight:700;
+    color:var(--text-hi);
+  }
+  .whatif-note{font-size:11px; color:var(--text-lo); margin-top:12px; text-align:center; line-height:1.5;}
+
   .header-link{
     display:flex;
     align-items:center;
@@ -862,23 +912,14 @@
   </div>
   <div class="countdown" id="updatedText">Yükleniyor…</div>
 
-  <div class="header-link" id="openWhatifBtn">
-    <span>🕰️ Geçmişte Ne Olurdu?</span>
-    <span class="header-link-arrow">›</span>
-  </div>
-
   <div id="mainView">
 
   <div class="tabs">
     <button class="tab-btn active" id="tabFiat">DÖVİZ</button>
     <button class="tab-btn" id="tabCrypto">KRİPTO</button>
     <button class="tab-btn" id="tabGold">ALTIN</button>
+    <button class="tab-btn tab-btn-nav" id="tabWhatif">🕰️ GEÇMİŞ</button>
   </div>
-
-  <div class="board" id="board">
-    <div class="empty" style="padding:24px;">Yükleniyor…</div>
-  </div>
-  <div class="detail-panel" id="detailPanel"></div>
 
   <div class="section-title">ÇEVİRİCİ</div>
   <div class="card">
@@ -900,6 +941,12 @@
       <button class="chip" data-amt="100000">100.000</button>
     </div>
   </div>
+
+  <div class="section-title">CANLI DEĞERLER</div>
+  <div class="board" id="board">
+    <div class="empty" style="padding:24px;">Yükleniyor…</div>
+  </div>
+  <div class="detail-panel" id="detailPanel"></div>
 
   <div class="section-title">KARŞILAŞTIR</div>
   <div class="card">
@@ -952,17 +999,34 @@
   </div>
 
   <div id="whatifPage" style="display:none;">
-    <div class="header-link" id="closeWhatifBtn">
-      <span>‹ Geri</span>
+    <div class="header-link" id="closeWhatifBtn"><span>‹ Geri</span></div>
+
+    <div class="header-top" style="margin-top:14px;">
+      <div class="logo-mark" style="font-size:20px;">🕰️</div>
+      <div>
+        <div class="eyebrow"><span class="dot"></span>ZAMAN MAKİNESİ</div>
+        <h1 style="font-size:20px;">Geçmişte Ne Olurdu?</h1>
+      </div>
     </div>
-    <h1 style="font-size:20px; margin-bottom:16px;">Geçmişte Ne Olurdu?</h1>
-    <div class="card">
-      <div class="compare-intro">Bir kur veya coin seç, miktar gir, hangi zaman diliminde ne kazanır/kaybederdin görelim.</div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="detail-head" style="margin-bottom:14px;">
+        <div class="badge" id="whatifPreviewBadge">💵</div>
+        <div>
+          <div class="detail-code" id="whatifPreviewCode">USD/TRY</div>
+          <div class="detail-name" id="whatifPreviewName">Amerikan Doları</div>
+        </div>
+      </div>
       <div class="conv-row">
         <select id="whatifCodeSelect" style="flex:1;"></select>
         <input type="number" id="whatifAmount" value="1000" inputmode="decimal" style="flex:1;">
       </div>
-      <div class="chart-toggle" id="whatifPeriods" style="margin-top:10px;">
+      <div class="compare-intro" style="margin:10px 0 0;">Yukarıda kur/coin ve miktar seç, aşağıdan da zaman aralığını belirle.</div>
+    </div>
+
+    <div class="section-title">NE ZAMAN?</div>
+    <div class="card">
+      <div class="chart-toggle" id="whatifPeriods">
         <button data-days="30" class="">1A</button>
         <button data-days="180" class="">6A</button>
         <button data-days="365" class="active">1Y</button>
@@ -973,7 +1037,11 @@
         <input type="date" id="whatifCustomDate">
         <button class="btn" id="whatifCustomApplyBtn" style="flex:0 0 auto;">Uygula</button>
       </div>
-      <div class="whatif-results" id="whatifResults"></div>
+    </div>
+
+    <div class="section-title">SONUÇ</div>
+    <div class="card">
+      <div id="whatifResults"></div>
     </div>
   </div>
 
@@ -1082,6 +1150,7 @@
   const tabFiat = document.getElementById('tabFiat');
   const tabCrypto = document.getElementById('tabCrypto');
   const tabGold = document.getElementById('tabGold');
+  const tabWhatif = document.getElementById('tabWhatif');
   const fromSelect = document.getElementById('fromSelect');
   const toSelect = document.getElementById('toSelect');
   const amountFrom = document.getElementById('amountFrom');
@@ -1626,11 +1695,20 @@
     sel.value = whatifCode;
   }
 
+  function renderWhatifPreview(){
+    const c = findAsset(whatifCode);
+    if(!c) return;
+    document.getElementById('whatifPreviewBadge').innerHTML = renderBadge(c);
+    document.getElementById('whatifPreviewCode').textContent = c.code + '/TRY';
+    document.getElementById('whatifPreviewName').textContent = c.name;
+  }
+
   function openWhatifPage(){
     if(selectedCode && (FIAT.some(c=>c.code===selectedCode) || CRYPTO.some(c=>c.code===selectedCode))){
       whatifCode = selectedCode;
     }
     fillWhatifSelect();
+    renderWhatifPreview();
     document.getElementById('mainView').style.display = 'none';
     document.getElementById('whatifPage').style.display = 'block';
     computeWhatIf();
@@ -1639,14 +1717,14 @@
     document.getElementById('whatifPage').style.display = 'none';
     document.getElementById('mainView').style.display = '';
   }
-  document.getElementById('openWhatifBtn').addEventListener('click', openWhatifPage);
+  document.getElementById('tabWhatif').addEventListener('click', openWhatifPage);
   document.getElementById('closeWhatifBtn').addEventListener('click', closeWhatifPage);
 
   async function computeWhatIf(){
     const resultsEl = document.getElementById('whatifResults');
     if(!resultsEl) return;
     const amount = parseFloat(document.getElementById('whatifAmount').value) || 0;
-    if(amount <= 0){ resultsEl.innerHTML = ''; return; }
+    if(amount <= 0){ resultsEl.innerHTML = '<div class="empty" style="padding:16px 0;">Bir miktar gir.</div>'; return; }
     const code = whatifCode;
 
     let days, periodLabel;
@@ -1664,7 +1742,7 @@
     }
 
     const myRequestId = ++whatifRequestId;
-    resultsEl.innerHTML = '<div class="empty" style="padding:16px 0;">Hesaplanıyor…</div>';
+    resultsEl.innerHTML = '<div class="empty" style="padding:20px 0;">Hesaplanıyor…</div>';
     try{
       const pastRate = await getHistoricalRate(code, days);
       const currentRate = rates[code];
@@ -1676,21 +1754,25 @@
       const gainPct = pastValue !== 0 ? (gain / pastValue) * 100 : 0;
       const gainClass = gain > 0 ? 'up' : (gain < 0 ? 'down' : '');
       const gainSign = gain > 0 ? '+' : '';
+      const gainEmoji = gain > 0 ? '🚀' : (gain < 0 ? '📉' : '➖');
       const periodText = whatifDays === 'custom' ? periodLabel + ' tarihinde' : periodLabel + ' önce';
       resultsEl.innerHTML = `
-        <div class="whatif-card">
-          <div class="whatif-label">${periodText} öderdin</div>
-          <div class="whatif-value">${pastValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+        <div class="whatif-hero">
+          <div class="whatif-hero-label">${gainEmoji} Kazanç / Kayıp</div>
+          <div class="whatif-hero-value ${gainClass}">${gainSign}${gain.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+          <div class="whatif-hero-pct ${gainClass}">${gainSign}${gainPct.toFixed(1)}%</div>
         </div>
-        <div class="whatif-card">
-          <div class="whatif-label">Bugün değeri</div>
-          <div class="whatif-value">${currentValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+        <div class="whatif-subrow">
+          <div class="whatif-stat">
+            <div class="whatif-stat-label">${periodText} öderdin</div>
+            <div class="whatif-stat-value">${pastValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+          </div>
+          <div class="whatif-stat">
+            <div class="whatif-stat-label">Bugün değeri</div>
+            <div class="whatif-stat-value">${currentValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
+          </div>
         </div>
-        <div class="whatif-card wide">
-          <div class="whatif-label">Kazanç / Kayıp</div>
-          <div class="whatif-value ${gainClass}">${gainSign}${gain.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY <span style="font-size:12px;">(${gainSign}${gainPct.toFixed(1)}%)</span></div>
-          <div class="whatif-sub">${amount.toLocaleString('tr-TR')} ${code}, ${periodText} alınıp bugün elde tutulsaydı</div>
-        </div>
+        <div class="whatif-note">${amount.toLocaleString('tr-TR')} ${code}, ${periodText} alınıp bugün elde tutulsaydı</div>
       `;
     }catch(err){
       if(myRequestId !== whatifRequestId) return;
@@ -1705,6 +1787,7 @@
   });
   document.getElementById('whatifCodeSelect').addEventListener('change', (e)=>{
     whatifCode = e.target.value;
+    renderWhatifPreview();
     computeWhatIf();
   });
   document.getElementById('whatifPeriods').addEventListener('click', (e)=>{
