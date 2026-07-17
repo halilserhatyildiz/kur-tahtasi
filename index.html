@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0A0C0F">
+<meta name="theme-color" content="#FAF5E9">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kur Tahtası">
 <title>Kur Tahtası</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,17 +14,17 @@
 <link rel="manifest" href="manifest.json">
 <style>
   :root{
-    --void:#0A0C0F;
-    --panel:#14171C;
-    --panel-2:#191D23;
-    --border:#23262C;
-    --amber:#FFB020;
-    --amber-dim:#8A5E14;
-    --green:#00D26A;
-    --red:#FF4D4D;
-    --text-hi:#EDEFF2;
-    --text-lo:#6B7280;
-    --text-label:#9CA3AF;
+    --void:#FAF5E9;
+    --panel:#FFFFFF;
+    --panel-2:#F3ECDA;
+    --border:#E4D8BC;
+    --amber:#E09A1F;
+    --amber-dim:#D9B872;
+    --green:#0E9F5A;
+    --red:#D9433B;
+    --text-hi:#2B2417;
+    --text-lo:#8B7F68;
+    --text-label:#6E6249;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
@@ -109,9 +109,9 @@
     width:6px; height:6px; border-radius:50%;
     background:var(--text-lo);
   }
-  .status-chip.ok{color:var(--green); border-color:rgba(0,210,106,0.3);}
+  .status-chip.ok{color:var(--green); border-color:rgba(14,159,90,0.3);}
   .status-chip.ok .dot-sm{background:var(--green); box-shadow:0 0 5px var(--green);}
-  .status-chip.fail{color:var(--red); border-color:rgba(255,77,77,0.3);}
+  .status-chip.fail{color:var(--red); border-color:rgba(217,67,59,0.3);}
   .status-chip.fail .dot-sm{background:var(--red);}
   .countdown{font-size:11px; color:var(--text-lo); margin-top:2px; text-align:right;}
   .refresh-btn{
@@ -192,7 +192,7 @@
   .chip-asset:active{transform:scale(0.96);}
   .chip-asset.active{
     border-color:var(--amber);
-    background:rgba(255,176,32,0.10);
+    background:rgba(224,154,31,0.10);
   }
   .chip-asset.unavailable{opacity:.35; cursor:default;}
   .chip-asset .badge{width:26px; height:26px; font-size:13px;}
@@ -491,7 +491,7 @@
     padding:8px 8px;
     flex:1;
     min-width:0;
-    color-scheme:dark;
+    color-scheme:light;
   }
   .chart-meta{
     display:flex;
@@ -624,7 +624,7 @@
   .splash-glow{
     position:absolute;
     width:280px; height:280px;
-    background:radial-gradient(circle, rgba(255,176,32,0.16), transparent 70%);
+    background:radial-gradient(circle, rgba(224,154,31,0.16), transparent 70%);
     filter:blur(10px);
     pointer-events:none;
   }
@@ -639,8 +639,8 @@
     position:relative;
   }
   @keyframes splashPulse{
-    0%, 100%{box-shadow:0 0 0 0 rgba(255,176,32,0.25);}
-    50%{box-shadow:0 0 0 14px rgba(255,176,32,0);}
+    0%, 100%{box-shadow:0 0 0 0 rgba(224,154,31,0.25);}
+    50%{box-shadow:0 0 0 14px rgba(224,154,31,0);}
   }
   .splash-title{
     font-size:20px;
@@ -744,7 +744,7 @@
     position:absolute;
     top:-40%; right:-20%;
     width:120px; height:120px;
-    background:radial-gradient(circle, rgba(255,176,32,0.12), transparent 70%);
+    background:radial-gradient(circle, rgba(224,154,31,0.12), transparent 70%);
     pointer-events:none;
   }
   .chooser-card.fiat:hover, .chooser-card.fiat:active{border-color:var(--amber-dim);}
@@ -786,10 +786,10 @@
 
   <div id="chooserScreen" style="opacity:0; pointer-events:none;">
     <div class="chooser-bg-lines">
-      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:12%;" class="bg-line line-a"><polyline points="0,40 20,38 40,44 60,30 80,35 100,20 120,28 140,15 160,22 180,10 200,18 220,8 240,20 260,12 280,25 300,18 320,30 340,22 360,35 380,28 400,38" fill="none" stroke="#00D26A" stroke-width="1.5"/><polyline points="400,40 420,38 440,44 460,30 480,35 500,20 520,28 540,15 560,22 580,10 600,18 620,8 640,20 660,12 680,25 700,18 720,30 740,22 760,35 780,28 800,38" fill="none" stroke="#00D26A" stroke-width="1.5"/></svg>
-      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:38%;" class="bg-line line-b"><polyline points="0,15 20,22 40,10 60,25 80,18 100,32 120,20 140,38 160,28 180,42 200,30 220,45 240,32 260,40 280,25 300,38 320,20 340,32 360,15 380,28 400,18" fill="none" stroke="#FFB020" stroke-width="1.5"/><polyline points="400,15 420,22 440,10 460,25 480,18 500,32 520,20 540,38 560,28 580,42 600,30 620,45 640,32 660,40 680,25 700,38 720,20 740,32 760,15 780,28 800,18" fill="none" stroke="#FFB020" stroke-width="1.5"/></svg>
-      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:64%;" class="bg-line line-c"><polyline points="0,30 20,35 40,20 60,28 80,15 100,25 120,10 140,22 160,8 180,18 200,30 220,12 240,25 260,18 280,32 300,20 320,28 340,15 360,25 380,10 400,22" fill="none" stroke="#00D26A" stroke-width="1.5"/><polyline points="400,30 420,35 440,20 460,28 480,15 500,25 520,10 540,22 560,8 580,18 600,30 620,12 640,25 660,18 680,32 700,20 720,28 740,15 760,25 780,10 800,22" fill="none" stroke="#00D26A" stroke-width="1.5"/></svg>
-      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:86%;" class="bg-line line-d"><polyline points="0,20 20,10 40,25 60,15 80,30 100,18 120,35 140,22 160,40 180,28 200,15 220,32 240,20 260,38 280,25 300,10 320,28 340,18 360,32 380,20 400,35" fill="none" stroke="#FFB020" stroke-width="1.5"/><polyline points="400,20 420,10 440,25 460,15 480,30 500,18 520,35 540,22 560,40 580,28 600,15 620,32 640,20 660,38 680,25 700,10 720,28 740,18 760,32 780,20 800,35" fill="none" stroke="#FFB020" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:12%;" class="bg-line line-a"><polyline points="0,40 20,38 40,44 60,30 80,35 100,20 120,28 140,15 160,22 180,10 200,18 220,8 240,20 260,12 280,25 300,18 320,30 340,22 360,35 380,28 400,38" fill="none" stroke="#0E9F5A" stroke-width="1.5"/><polyline points="400,40 420,38 440,44 460,30 480,35 500,20 520,28 540,15 560,22 580,10 600,18 620,8 640,20 660,12 680,25 700,18 720,30 740,22 760,35 780,28 800,38" fill="none" stroke="#0E9F5A" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:38%;" class="bg-line line-b"><polyline points="0,15 20,22 40,10 60,25 80,18 100,32 120,20 140,38 160,28 180,42 200,30 220,45 240,32 260,40 280,25 300,38 320,20 340,32 360,15 380,28 400,18" fill="none" stroke="#E09A1F" stroke-width="1.5"/><polyline points="400,15 420,22 440,10 460,25 480,18 500,32 520,20 540,38 560,28 580,42 600,30 620,45 640,32 660,40 680,25 700,38 720,20 740,32 760,15 780,28 800,18" fill="none" stroke="#E09A1F" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:64%;" class="bg-line line-c"><polyline points="0,30 20,35 40,20 60,28 80,15 100,25 120,10 140,22 160,8 180,18 200,30 220,12 240,25 260,18 280,32 300,20 320,28 340,15 360,25 380,10 400,22" fill="none" stroke="#0E9F5A" stroke-width="1.5"/><polyline points="400,30 420,35 440,20 460,28 480,15 500,25 520,10 540,22 560,8 580,18 600,30 620,12 640,25 660,18 680,32 700,20 720,28 740,15 760,25 780,10 800,22" fill="none" stroke="#0E9F5A" stroke-width="1.5"/></svg>
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="top:86%;" class="bg-line line-d"><polyline points="0,20 20,10 40,25 60,15 80,30 100,18 120,35 140,22 160,40 180,28 200,15 220,32 240,20 260,38 280,25 300,10 320,28 340,18 360,32 380,20 400,35" fill="none" stroke="#E09A1F" stroke-width="1.5"/><polyline points="400,20 420,10 440,25 460,15 480,30 500,18 520,35 540,22 560,40 580,28 600,15 620,32 640,20 660,38 680,25 700,10 720,28 740,18 760,32 780,20 800,35" fill="none" stroke="#E09A1F" stroke-width="1.5"/></svg>
     </div>
     <div class="chooser-title">Ne yapmak istiyorsun?</div>
     <div class="chooser-sub">Önce hangi tarafa bakmak istersin, istediğin zaman değiştirebilirsin.</div>
@@ -1280,7 +1280,7 @@
 
   // GoldAPI.io ücretsiz Demo plan: goldapi.io/dashboard adresinden Google ile giriş yapıp
   // ücretsiz anahtar alabilirsin (kart istemiyor, ayda 500 istek). Aşağıya yapıştır.
-  const GOLDAPI_KEY = '';
+  const GOLDAPI_KEY = 'goldapi-356786500ec3136cca3e628a44d86328-io';
   const GRAM_PER_OUNCE = 31.1035;
 
   async function fetchGold(){
@@ -1664,8 +1664,8 @@
     const linePath = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1)).join(' ');
     const areaPath = linePath + ` L${coords[coords.length - 1][0].toFixed(1)},${h - padY} L${coords[0][0].toFixed(1)},${h - padY} Z`;
     const up = values[values.length - 1] >= values[0];
-    const strokeColor = up ? '#00D26A' : '#FF4D4D';
-    const fillColor = up ? 'rgba(0,210,106,0.12)' : 'rgba(255,77,77,0.12)';
+    const strokeColor = up ? '#0E9F5A' : '#D9433B';
+    const fillColor = up ? 'rgba(14,159,90,0.12)' : 'rgba(217,67,59,0.12)';
     const decimals = max >= 100 ? 2 : 4;
     const periodPct = values[0] !== 0 ? ((values[values.length - 1] - values[0]) / values[0]) * 100 : 0;
     const periodColor = periodPct > 0 ? 'var(--green)' : (periodPct < 0 ? 'var(--red)' : 'var(--text-lo)');
