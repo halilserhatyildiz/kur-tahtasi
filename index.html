@@ -452,6 +452,12 @@
     color:#231600;
     border-color:var(--amber);
   }
+  .period-change{
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:8px;
+  }
   .chart-area{min-height:110px;}
   .chart-tooltip{
     position:absolute;
@@ -493,6 +499,60 @@
     font-size:10.5px;
     color:var(--text-lo);
     margin-top:4px;
+  }
+
+  .compare-intro{
+    font-size:12px;
+    color:var(--text-lo);
+    line-height:1.5;
+    margin-bottom:12px;
+  }
+  .compare-try-label{
+    flex:0 0 60px;
+    text-align:center;
+    font-family:'Space Mono',monospace;
+    font-size:14px;
+    font-weight:700;
+    color:var(--text-lo);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 0;
+  }
+  .compare-selects{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:6px;
+    margin-top:10px;
+  }
+  .compare-selects select{width:100%; flex:none;}
+  .compare-results{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:6px;
+    margin-top:10px;
+  }
+  .compare-card{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 6px;
+    text-align:center;
+  }
+  .compare-card-head{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    margin-bottom:6px;
+  }
+  .compare-code{font-size:11px; font-weight:700; color:var(--text-label);}
+  .compare-value{
+    font-family:'Space Mono',monospace;
+    font-size:14px;
+    font-weight:700;
+    color:var(--amber);
+    word-break:break-word;
   }
 
   .footnote{
@@ -579,6 +639,21 @@
       <button class="chip" data-amt="10000">10.000</button>
       <button class="chip" data-amt="100000">100.000</button>
     </div>
+  </div>
+
+  <div class="section-title">KARŞILAŞTIR</div>
+  <div class="card">
+    <div class="compare-intro">Elindeki TL tutarını gir, hangi kur/coin'den ne kadar alacağını yan yana gör.</div>
+    <div class="conv-row">
+      <input type="number" id="compareAmount" value="1000" inputmode="decimal">
+      <span class="compare-try-label">TRY</span>
+    </div>
+    <div class="compare-selects" id="compareSelects">
+      <select data-slot="0"></select>
+      <select data-slot="1"></select>
+      <select data-slot="2"></select>
+    </div>
+    <div class="compare-results" id="compareResults"></div>
   </div>
 
   <div class="section-title">ALARMLAR</div>
@@ -721,7 +796,13 @@
   const alarmList = document.getElementById('alarmList');
   const convHistList = document.getElementById('convHistList');
   const clearHistBtn = document.getElementById('clearHistBtn');
+  const compareAmount = document.getElementById('compareAmount');
+  const compareSelectsWrap = document.getElementById('compareSelects');
+  const compareResults = document.getElementById('compareResults');
   const toast = document.getElementById('toast');
+
+  const COMPARE_DEFAULTS = { fiat: ['USD','EUR','GBP'], crypto: ['BTC','ETH','SOL'] };
+  let compareCodes = [...COMPARE_DEFAULTS.fiat];
 
   function showToast(msg){
     toast.textContent = msg;
@@ -779,16 +860,71 @@
     }
   }
 
+  function fillCompareSelects(){
+    const options = currentAssetList().filter(c => c.available !== false);
+    const extra = activeTab === 'crypto' ? [{code:'USD', name:'Amerikan Doları'}] : [];
+    const allOptions = [...options, ...extra];
+    compareSelectsWrap.querySelectorAll('select').forEach((sel, i)=>{
+      sel.innerHTML = '';
+      allOptions.forEach(c=>{
+        const o = document.createElement('option');
+        o.value = c.code; o.textContent = c.code;
+        sel.appendChild(o);
+      });
+      const wanted = compareCodes[i];
+      if(wanted && allOptions.some(c => c.code === wanted)){
+        sel.value = wanted;
+      }else{
+        sel.value = allOptions[i % allOptions.length].code;
+        compareCodes[i] = sel.value;
+      }
+    });
+  }
+
+  function renderCompare(){
+    const amount = parseFloat(compareAmount.value) || 0;
+    compareResults.innerHTML = compareCodes.map(code=>{
+      const asset = findAsset(code);
+      const rate = rates[code];
+      if(!asset || rate === undefined){
+        return `<div class="compare-card"><div class="compare-code">${code}</div><div class="compare-value" style="color:var(--text-lo); font-size:11px;">veri yok</div></div>`;
+      }
+      const units = amount / rate;
+      const decimals = units >= 100 ? 2 : 4;
+      return `
+        <div class="compare-card">
+          <div class="compare-card-head">
+            <div class="badge">${renderBadge(asset)}</div>
+            <div class="compare-code">${code}</div>
+          </div>
+          <div class="compare-value">${units.toLocaleString('tr-TR', {maximumFractionDigits:decimals})}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  compareAmount.addEventListener('input', renderCompare);
+  compareSelectsWrap.addEventListener('change', (e)=>{
+    const sel = e.target.closest('select');
+    if(!sel) return;
+    const slot = parseInt(sel.dataset.slot, 10);
+    compareCodes[slot] = sel.value;
+    renderCompare();
+  });
+
   function setTab(tab){
     activeTab = tab;
     const available = currentAssetListFor(tab).filter(c => c.available !== false);
     selectedCode = available.length ? available[0].code : null;
+    compareCodes = [...COMPARE_DEFAULTS[tab]];
     tabFiat.classList.toggle('active', tab === 'fiat');
     tabCrypto.classList.toggle('active', tab === 'crypto');
     refreshScopedSelects();
+    fillCompareSelects();
     renderBoard();
     renderDetailPanel();
     renderConverter();
+    renderCompare();
     renderAlarms();
     renderAlarmCurrentRate();
   }
@@ -899,6 +1035,7 @@
     renderBoard();
     renderDetailPanel();
     renderConverter();
+    renderCompare();
     checkAlarms();
     renderAlarmCurrentRate();
     setTimeout(()=> refreshBtn.classList.remove('spinning'), 700);
@@ -1108,7 +1245,13 @@
     const strokeColor = up ? '#00D26A' : '#FF4D4D';
     const fillColor = up ? 'rgba(0,210,106,0.12)' : 'rgba(255,77,77,0.12)';
     const decimals = max >= 100 ? 2 : 4;
+    const periodPct = values[0] !== 0 ? ((values[values.length - 1] - values[0]) / values[0]) * 100 : 0;
+    const periodColor = periodPct > 0 ? 'var(--green)' : (periodPct < 0 ? 'var(--red)' : 'var(--text-lo)');
+    const periodSign = periodPct > 0 ? '+' : '';
     return `
+      <div class="period-change" style="color:${periodColor};">
+        Seçili dönemde: ${periodSign}${periodPct.toFixed(2)}%
+      </div>
       <div class="chart-canvas" style="position:relative;">
         <svg id="detailChartSvg" viewBox="0 0 ${w} ${h}" style="width:100%; height:110px; display:block; touch-action:none; cursor:crosshair;">
           <path d="${areaPath}" fill="${fillColor}" stroke="none"/>
@@ -1450,6 +1593,7 @@
 
   async function init(){
     refreshScopedSelects();
+    fillCompareSelects();
     await loadAlarms();
     await loadConvHistory();
     renderConvHistory();
