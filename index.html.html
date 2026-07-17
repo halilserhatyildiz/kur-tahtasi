@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0C0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kur Tahtası">
+<title>Kur Tahtası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --void:#0A0C0F;
+    --panel:#14171C;
+    --panel-2:#191D23;
+    --border:#23262C;
+    --amber:#FFB020;
+    --amber-dim:#8A5E14;
+    --green:#00D26A;
+    --red:#FF4D4D;
+    --text-hi:#EDEFF2;
+    --text-lo:#6B7280;
+    --text-label:#9CA3AF;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:var(--void);
+    color:var(--text-hi);
+    font-family:'Manrope',sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:2.5px;
+    color:var(--amber);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 6px var(--green);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  h1{
+    font-size:28px;
+    font-weight:700;
+    margin-top:4px;
+    letter-spacing:-0.5px;
+  }
+  .subrow{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:8px;
+  }
+  .updated{
+    font-size:12px;
+    color:var(--text-lo);
+  }
+  .refresh-btn{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text-label);
+    width:34px;height:34px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+  }
+  .refresh-btn.spinning{animation:spin .7s linear;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .tabs{
+    display:flex;
+    margin-top:20px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:3px;
+    gap:3px;
+  }
+  .tab-btn{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--text-lo);
+    font-family:'Manrope',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:9px 0;
+    border-radius:7px;
+    cursor:pointer;
+    letter-spacing:0.5px;
+  }
+  .tab-btn.active{
+    background:var(--amber);
+    color:#231600;
+  }
+
+  .board{
+    margin-top:10px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .badge{
+    border-radius:8px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:12px;
+  }
+  .chip-asset{
+    width:60px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    padding:8px 2px;
+    border-radius:10px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    cursor:pointer;
+  }
+  .chip-asset:active{transform:scale(0.96);}
+  .chip-asset.active{
+    border-color:var(--amber);
+    background:rgba(255,176,32,0.10);
+  }
+  .chip-asset.unavailable{opacity:.35; cursor:default;}
+  .chip-asset .badge{width:26px; height:26px; font-size:13px;}
+  .chip-code{font-size:10.5px; font-weight:600; color:var(--text-hi);}
+  .chip-arrow{font-size:9px; font-weight:700;}
+  .chip-arrow.up{color:var(--green);}
+  .chip-arrow.down{color:var(--red);}
+
+  .detail-panel{
+    margin-top:10px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+  }
+  .detail-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .detail-head .badge{width:32px; height:32px; font-size:16px;}
+  .detail-name{font-size:13px; color:var(--text-lo);}
+  .detail-code{font-size:15px; color:var(--text-hi); font-weight:700;}
+  .detail-value{
+    font-family:'Space Mono',monospace;
+    font-size:26px;
+    font-weight:700;
+    color:var(--amber);
+    margin-bottom:10px;
+    transition:transform .18s ease;
+  }
+  .detail-value.pulse{transform:scale(1.04);}
+  .detail-changes{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:6px;
+  }
+  .chg{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:6px 2px;
+    text-align:center;
+  }
+  .chg-label{font-size:9px; color:var(--text-lo); display:block; margin-bottom:2px; letter-spacing:0.5px;}
+  .chg-val{font-family:'Space Mono',monospace; font-size:11.5px; font-weight:700; color:var(--text-lo);}
+  .chg.up .chg-val{color:var(--green);}
+  .chg.down .chg-val{color:var(--red);}
+
+  .section-title{
+    font-size:12px;
+    letter-spacing:1.5px;
+    color:var(--text-label);
+    font-weight:700;
+    margin:28px 0 10px 2px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .section-title .clear-btn{
+    font-size:11px;
+    letter-spacing:0;
+    color:var(--text-lo);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    font-weight:500;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+  }
+
+  .conv-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  input, select{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text-hi);
+    font-family:'Space Mono',monospace;
+    font-size:15px;
+    padding:10px 12px;
+    border-radius:8px;
+    outline:none;
+    width:100%;
+  }
+  input{min-width:0;}
+  select{
+    flex:0 0 130px;
+    text-overflow:ellipsis;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+  input:focus, select:focus{border-color:var(--amber-dim);}
+  .conv-swap{
+    text-align:center;
+    color:var(--amber);
+    font-size:16px;
+    margin:10px 0;
+    cursor:pointer;
+    user-select:none;
+  }
+  .conv-result-big{
+    margin-top:4px;
+    font-family:'Space Mono',monospace;
+    font-size:30px;
+    font-weight:700;
+    color:var(--amber);
+    letter-spacing:-0.5px;
+    text-align:right;
+    transition:transform .18s ease;
+  }
+  .conv-result-big.pulse{
+    transform:scale(1.05);
+    color:var(--green);
+  }
+  .quick-chips{
+    display:flex;
+    gap:6px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text-label);
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .chip:active{transform:scale(0.95); background:var(--amber); color:#231600; border-color:var(--amber);}
+  .conv-result-sub{
+    text-align:right;
+    font-size:11px;
+    color:var(--text-lo);
+    margin-top:2px;
+  }
+
+  .alarm-form{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .alarm-form select, .alarm-form input{flex:1 1 45%; min-width:0;}
+  .alarm-add-btn{width:100%; margin-top:2px;}
+  .btn{
+    background:var(--amber);
+    color:#231600;
+    border:none;
+    font-weight:700;
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn:active{transform:scale(0.97);}
+  .alarm-help{
+    font-size:11px;
+    color:var(--text-lo);
+    line-height:1.6;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:14px;
+  }
+  .alarm-help b{color:var(--text-label);}
+  .alarm-item{
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .alarm-item:last-child{border-bottom:none;}
+  .alarm-item-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .alarm-text{font-size:13px; color:var(--text-hi); font-weight:700;}
+  .alarm-sub{font-size:12px; color:var(--amber); font-weight:700; margin-top:3px; font-family:'Space Mono',monospace;}
+  .alarm-tags{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .alarm-tag{
+    font-size:10px;
+    color:var(--text-label);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    padding:3px 8px;
+    border-radius:20px;
+  }
+  .alarm-del{
+    background:none; border:none; color:var(--text-lo);
+    font-size:18px; cursor:pointer; padding:4px 8px;
+  }
+  .empty{
+    font-size:12px;
+    color:var(--text-lo);
+    text-align:center;
+    padding:8px 0;
+  }
+
+  .hist-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .hist-item:last-child{border-bottom:none;}
+  .hist-left{display:flex; align-items:center; gap:10px;}
+  .hist-icon{
+    width:30px; height:30px;
+    border-radius:8px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .hist-conv{font-size:13px; color:var(--text-hi); font-weight:600;}
+  .hist-time{font-size:11px; color:var(--text-lo); margin-top:2px;}
+  .hist-del{
+    background:none; border:none; color:var(--text-lo);
+    font-size:16px; cursor:pointer; padding:4px 6px; flex-shrink:0;
+  }
+
+  .footnote{
+    font-size:11px;
+    line-height:1.6;
+    color:var(--text-lo);
+    margin-top:28px;
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--panel-2);
+  }
+  .footnote b{color:var(--text-label);}
+  .toast{
+    position:fixed;
+    bottom:20px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--amber);
+    color:#231600;
+    font-size:13px;
+    font-weight:700;
+    padding:10px 18px;
+    border-radius:8px;
+    opacity:0;
+    transition:all .3s ease;
+    pointer-events:none;
+    max-width:90%;
+    text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+  <div class="eyebrow"><span class="dot"></span>CANLI TAKİP</div>
+  <h1>Kur Tahtası</h1>
+  <div class="subrow">
+    <div class="updated" id="updatedText">Yükleniyor…</div>
+    <button class="refresh-btn" id="refreshBtn" aria-label="Yenile">↻</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabFiat">DÖVİZ</button>
+    <button class="tab-btn" id="tabCrypto">KRİPTO</button>
+  </div>
+
+  <div class="board" id="board">
+    <div class="empty" style="padding:24px;">Yükleniyor…</div>
+  </div>
+  <div class="detail-panel" id="detailPanel"></div>
+
+  <div class="section-title">ÇEVİRİCİ</div>
+  <div class="card">
+    <div class="conv-row">
+      <input type="number" id="amountFrom" value="100" inputmode="decimal">
+      <select id="fromSelect"></select>
+    </div>
+    <div class="conv-swap" id="swapBtn">⇅ yönü değiştir</div>
+    <div class="conv-row">
+      <select id="toSelect"></select>
+    </div>
+    <div class="conv-result-big" id="convResultBig">0</div>
+    <div class="conv-result-sub" id="convResultSub"></div>
+    <div class="quick-chips" id="quickChips">
+      <button class="chip" data-amt="10">10</button>
+      <button class="chip" data-amt="100">100</button>
+      <button class="chip" data-amt="1000">1.000</button>
+      <button class="chip" data-amt="10000">10.000</button>
+      <button class="chip" data-amt="100000">100.000</button>
+    </div>
+  </div>
+
+  <div class="section-title">ALARMLAR</div>
+  <div class="card">
+    <div class="alarm-form">
+      <select id="alarmCurrency"></select>
+      <input type="number" id="alarmTarget" placeholder="Hedef kur">
+      <select id="alarmDirection">
+        <option value="above">Üzerine çıkınca</option>
+        <option value="below">Altına düşünce</option>
+        <option value="either">İkisi de</option>
+      </select>
+      <select id="alarmFrequency">
+        <option value="instant">Anlık bildirim</option>
+        <option value="hourly">Saatte en fazla 1</option>
+        <option value="daily">Günde en fazla 1</option>
+      </select>
+    </div>
+    <button class="btn alarm-add-btn" id="alarmAddBtn">Alarm Ekle</button>
+    <div class="conv-result-sub" id="alarmCurrentRate" style="text-align:left; margin-top:8px;"></div>
+    <div class="alarm-help" style="margin-top:12px;">
+      <b>Yön:</b> kur hedefe hangi taraftan ulaşırsa bildirim gelsin, onu belirler.<br>
+      <b>Bildirim sıklığı:</b> kur hedefte kalmaya devam ederse tekrar tekrar bildirim almamak için — anlık her tetiklendiğinde, saatlik/günlük ise seçtiğin süre içinde en fazla bir kez uyarır.<br>
+      <b>Kontrol aralığı:</b> kurlar arka planda yaklaşık her 1 dakikada bir yenilenir, alarm o an kontrol edilir.
+    </div>
+    <div id="alarmList"></div>
+  </div>
+
+  <div class="section-title">
+    GEÇMİŞ
+    <button class="clear-btn" id="clearHistBtn">tümünü temizle</button>
+  </div>
+  <div class="card">
+    <div id="convHistList"></div>
+  </div>
+
+  <div class="footnote">
+    <b>Not:</b> Döviz kurları Avrupa Merkez Bankası referans verisine dayanır ve iş günlerinde günde bir kez güncellenir — anlık banka/dövizci kuru değildir, bu yüzden dövizde 1 saatlik değişim "—" görünür. Kripto fiyatları piyasadan dakikada bir çekilir ve gerçek zamanlıya yakındır, 1 saatlik değişim de gösterilir. Gösterilen değerler orta piyasa fiyatıdır. Rus Rublesi ve Tayvan Doları için ücretsiz veri kaynağımızda kur bulunmuyor, bu ikisi "veri yok" olarak görünür. Bir satıra dokunarak güncel değeri ve değişim yüzdelerini görebilirsin.
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const FIAT = [
+    { code:'USD', name:'Amerikan Doları', cc:'us' },
+    { code:'EUR', name:'Euro', cc:'eu' },
+    { code:'GBP', name:'İngiliz Sterlini', cc:'gb' },
+    { code:'JPY', name:'Japon Yeni', cc:'jp' },
+    { code:'CHF', name:'İsviçre Frangı', cc:'ch' },
+    { code:'CAD', name:'Kanada Doları', cc:'ca' },
+    { code:'AUD', name:'Avustralya Doları', cc:'au' },
+    { code:'NZD', name:'Yeni Zelanda Doları', cc:'nz' },
+    { code:'CNY', name:'Çin Yuanı', cc:'cn' },
+    { code:'HKD', name:'Hong Kong Doları', cc:'hk' },
+    { code:'SGD', name:'Singapur Doları', cc:'sg' },
+    { code:'SEK', name:'İsveç Kronu', cc:'se' },
+    { code:'NOK', name:'Norveç Kronu', cc:'no' },
+    { code:'DKK', name:'Danimarka Kronu', cc:'dk' },
+    { code:'PLN', name:'Polonya Zlotisi', cc:'pl' },
+    { code:'CZK', name:'Çek Korunası', cc:'cz' },
+    { code:'HUF', name:'Macar Forinti', cc:'hu' },
+    { code:'RON', name:'Rumen Leyi', cc:'ro' },
+    { code:'BGN', name:'Bulgar Levası', cc:'bg' },
+    { code:'RUB', name:'Rus Rublesi', cc:'ru', available:false },
+    { code:'INR', name:'Hint Rupisi', cc:'in' },
+    { code:'KRW', name:'Güney Kore Wonu', cc:'kr' },
+    { code:'TWD', name:'Tayvan Doları', cc:'tw', available:false },
+    { code:'THB', name:'Tayland Bahtı', cc:'th' },
+    { code:'MYR', name:'Malezya Ringgiti', cc:'my' },
+    { code:'IDR', name:'Endonezya Rupiahı', cc:'id' },
+    { code:'PHP', name:'Filipin Pesosu', cc:'ph' },
+    { code:'MXN', name:'Meksika Pesosu', cc:'mx' },
+    { code:'BRL', name:'Brezilya Reali', cc:'br' }
+  ];
+  const TRY_ASSET = { code:'TRY', name:'Türk Lirası', cc:'tr' };
+
+  const CRYPTO = [
+    { code:'BTC', name:'Bitcoin', icon:'₿', id:'bitcoin' },
+    { code:'ETH', name:'Ethereum', icon:'Ξ', id:'ethereum' },
+    { code:'USDT', name:'Tether', icon:'₮', id:'tether' },
+    { code:'BNB', name:'BNB', icon:'🔶', id:'binancecoin' },
+    { code:'SOL', name:'Solana', icon:'◎', id:'solana' },
+    { code:'XRP', name:'XRP', icon:'✕', id:'ripple' },
+    { code:'USDC', name:'USD Coin', icon:'💲', id:'usd-coin' },
+    { code:'DOGE', name:'Dogecoin', icon:'🐕', id:'dogecoin' },
+    { code:'ADA', name:'Cardano', icon:'₳', id:'cardano' },
+    { code:'TRX', name:'Tron', icon:'⚡', id:'tron' },
+    { code:'LINK', name:'Chainlink', icon:'🔗', id:'chainlink' },
+    { code:'AVAX', name:'Avalanche', icon:'🔺', id:'avalanche-2' },
+    { code:'XLM', name:'Stellar', icon:'✴️', id:'stellar' },
+    { code:'SUI', name:'Sui', icon:'💧', id:'sui' },
+    { code:'HBAR', name:'Hedera', icon:'⬡', id:'hedera-hashgraph' },
+    { code:'BCH', name:'Bitcoin Cash', icon:'🅱️', id:'bitcoin-cash' },
+    { code:'TON', name:'Toncoin', icon:'💎', id:'the-open-network' },
+    { code:'DOT', name:'Polkadot', icon:'⚫', id:'polkadot' },
+    { code:'LTC', name:'Litecoin', icon:'Ł', id:'litecoin' },
+    { code:'SHIB', name:'Shiba Inu', icon:'🐾', id:'shiba-inu' },
+    { code:'PEPE', name:'Pepe', icon:'🐸', id:'pepe' },
+    { code:'AAVE', name:'Aave', icon:'👻', id:'aave' },
+    { code:'UNI', name:'Uniswap', icon:'🦄', id:'uniswap' },
+    { code:'APT', name:'Aptos', icon:'🅰️', id:'aptos' },
+    { code:'NEAR', name:'NEAR Protocol', icon:'Ⓝ', id:'near' },
+    { code:'ATOM', name:'Cosmos', icon:'⚛️', id:'cosmos' },
+    { code:'ETC', name:'Ethereum Classic', icon:'🔷', id:'ethereum-classic' },
+    { code:'ICP', name:'Internet Computer', icon:'∞', id:'internet-computer' },
+    { code:'FIL', name:'Filecoin', icon:'📁', id:'filecoin' },
+    { code:'ARB', name:'Arbitrum', icon:'🔵', id:'arbitrum' }
+  ];
+
+  let rates = { TRY: 1 };
+  let prevRates = {};
+  let changes = {};
+  let selectedCode = 'USD';
+  let alarms = [];
+  let convHistory = [];
+  let activeTab = 'fiat';
+
+  const board = document.getElementById('board');
+  const detailPanel = document.getElementById('detailPanel');
+  const updatedText = document.getElementById('updatedText');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const tabFiat = document.getElementById('tabFiat');
+  const tabCrypto = document.getElementById('tabCrypto');
+  const fromSelect = document.getElementById('fromSelect');
+  const toSelect = document.getElementById('toSelect');
+  const amountFrom = document.getElementById('amountFrom');
+  const swapBtn = document.getElementById('swapBtn');
+  const convResultBig = document.getElementById('convResultBig');
+  const convResultSub = document.getElementById('convResultSub');
+  const alarmCurrency = document.getElementById('alarmCurrency');
+  const alarmTarget = document.getElementById('alarmTarget');
+  const alarmDirection = document.getElementById('alarmDirection');
+  const alarmFrequency = document.getElementById('alarmFrequency');
+  const alarmCurrentRate = document.getElementById('alarmCurrentRate');
+  const alarmList = document.getElementById('alarmList');
+  const convHistList = document.getElementById('convHistList');
+  const clearHistBtn = document.getElementById('clearHistBtn');
+  const toast = document.getElementById('toast');
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 2600);
+  }
+
+  function currentAssetList(){
+    return activeTab === 'fiat' ? FIAT : CRYPTO;
+  }
+  function findAsset(code){
+    if(code === 'TRY') return TRY_ASSET;
+    return FIAT.find(c=>c.code===code) || CRYPTO.find(c=>c.code===code);
+  }
+  function renderBadge(asset){
+    if(!asset) return '·';
+    if(asset.cc){
+      return `<img src="https://flagcdn.com/w80/${asset.cc}.png" alt="${asset.code}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+    }
+    return asset.icon || asset.code.slice(0,1);
+  }
+
+  function fillScopedSelect(sel, withTry){
+    const prevVal = sel.value;
+    sel.innerHTML = '';
+    if(withTry){
+      const o = document.createElement('option');
+      o.value = 'TRY'; o.textContent = 'TRY';
+      sel.appendChild(o);
+      if(activeTab === 'crypto'){
+        const ou = document.createElement('option');
+        ou.value = 'USD'; ou.textContent = 'USD';
+        sel.appendChild(ou);
+      }
+    }
+    currentAssetList().filter(c => c.available !== false).forEach(c=>{
+      const o = document.createElement('option');
+      o.value = c.code; o.textContent = c.code;
+      sel.appendChild(o);
+    });
+    const stillValid = Array.from(sel.options).some(o => o.value === prevVal);
+    if(stillValid) sel.value = prevVal;
+  }
+
+  function refreshScopedSelects(){
+    fillScopedSelect(fromSelect, true);
+    fillScopedSelect(toSelect, true);
+    fillScopedSelect(alarmCurrency, false);
+    const available = currentAssetList().filter(c => c.available !== false);
+    if(!available.some(c => c.code === fromSelect.value)){
+      fromSelect.value = available[0].code;
+    }
+    if(toSelect.value !== 'TRY'){
+      toSelect.value = 'TRY';
+    }
+  }
+
+  function setTab(tab){
+    activeTab = tab;
+    const available = currentAssetListFor(tab).filter(c => c.available !== false);
+    selectedCode = available.length ? available[0].code : null;
+    tabFiat.classList.toggle('active', tab === 'fiat');
+    tabCrypto.classList.toggle('active', tab === 'crypto');
+    refreshScopedSelects();
+    renderBoard();
+    renderDetailPanel();
+    renderConverter();
+    renderAlarms();
+    renderAlarmCurrentRate();
+  }
+  function currentAssetListFor(tab){
+    return tab === 'fiat' ? FIAT : CRYPTO;
+  }
+
+  async function fetchRates(){
+    refreshBtn.classList.add('spinning');
+    try{
+      const fiatCodes = FIAT.filter(c => c.available !== false).map(c => c.code).join(',');
+      const cryptoIds = CRYPTO.map(c=>c.id).join(',');
+
+      const today = new Date();
+      const d1 = new Date(today); d1.setDate(d1.getDate() - 1);
+      const d7 = new Date(today); d7.setDate(d7.getDate() - 7);
+      const d30 = new Date(today); d30.setDate(d30.getDate() - 30);
+      const fmt = d => d.toISOString().slice(0, 10);
+
+      const [latestRes, d1Res, d7Res, d30Res, cryptoRes] = await Promise.all([
+        fetch(`https://api.frankfurter.app/latest?from=TRY&to=${fiatCodes}`),
+        fetch(`https://api.frankfurter.app/${fmt(d1)}?from=TRY&to=${fiatCodes}`),
+        fetch(`https://api.frankfurter.app/${fmt(d7)}?from=TRY&to=${fiatCodes}`),
+        fetch(`https://api.frankfurter.app/${fmt(d30)}?from=TRY&to=${fiatCodes}`),
+        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=try&ids=${cryptoIds}&price_change_percentage=1h,24h,7d,30d`)
+      ]);
+      const latestData = await latestRes.json();
+      const d1Data = await d1Res.json().catch(()=>null);
+      const d7Data = await d7Res.json().catch(()=>null);
+      const d30Data = await d30Res.json().catch(()=>null);
+      const cryptoData = await cryptoRes.json().catch(()=>null);
+
+      prevRates = { ...rates };
+      const newRates = { TRY: 1 };
+      const newChanges = {};
+
+      Object.keys(latestData.rates || {}).forEach(code=>{
+        newRates[code] = 1 / latestData.rates[code];
+      });
+      const pastRate = (data, code) => (data && data.rates && data.rates[code]) ? 1 / data.rates[code] : undefined;
+      Object.keys(latestData.rates || {}).forEach(code=>{
+        const cur = newRates[code];
+        const p1 = pastRate(d1Data, code), p7 = pastRate(d7Data, code), p30 = pastRate(d30Data, code);
+        newChanges[code] = {
+          h1: null,
+          d1: p1 !== undefined ? ((cur - p1) / p1) * 100 : null,
+          w1: p7 !== undefined ? ((cur - p7) / p7) * 100 : null,
+          m1: p30 !== undefined ? ((cur - p30) / p30) * 100 : null
+        };
+      });
+
+      if(Array.isArray(cryptoData)){
+        cryptoData.forEach(item=>{
+          const meta = CRYPTO.find(c => c.id === item.id);
+          if(!meta) return;
+          newRates[meta.code] = item.current_price;
+          newChanges[meta.code] = {
+            h1: item.price_change_percentage_1h_in_currency ?? null,
+            d1: item.price_change_percentage_24h_in_currency ?? null,
+            w1: item.price_change_percentage_7d_in_currency ?? null,
+            m1: item.price_change_percentage_30d_in_currency ?? null
+          };
+        });
+      }
+
+      rates = newRates;
+      changes = newChanges;
+
+      const now = new Date();
+      updatedText.textContent = 'Son kontrol: ' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+
+      renderBoard();
+      renderDetailPanel();
+      renderConverter();
+      checkAlarms();
+      renderAlarmCurrentRate();
+    }catch(err){
+      updatedText.textContent = 'Veriler alınamadı, bağlantını kontrol et';
+    }finally{
+      setTimeout(()=> refreshBtn.classList.remove('spinning'), 700);
+    }
+  }
+
+  function renderChangeChip(label, val){
+    if(val === null || val === undefined || Number.isNaN(val)){
+      return `<div class="chg"><span class="chg-label">${label}</span><span class="chg-val">—</span></div>`;
+    }
+    const cls = val > 0 ? 'up' : (val < 0 ? 'down' : '');
+    const sign = val > 0 ? '+' : '';
+    return `<div class="chg ${cls}"><span class="chg-label">${label}</span><span class="chg-val">${sign}${val.toFixed(2)}%</span></div>`;
+  }
+
+  function renderBoard(){
+    const list = currentAssetList();
+    board.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    list.forEach(c=>{
+      const val = rates[c.code];
+      const chip = document.createElement('div');
+      chip.dataset.code = c.code;
+      const unavailable = val === undefined;
+      chip.className = 'chip-asset' + (unavailable ? ' unavailable' : '') + (c.code === selectedCode ? ' active' : '');
+      const ch = changes[c.code] || {};
+      const dayChange = ch.d1;
+      let arrow = '';
+      if(!unavailable && dayChange !== null && dayChange !== undefined){
+        arrow = `<div class="chip-arrow ${dayChange > 0 ? 'up' : (dayChange < 0 ? 'down' : '')}">${dayChange > 0 ? '▲' : (dayChange < 0 ? '▼' : '—')}</div>`;
+      }
+      chip.innerHTML = `
+        <div class="badge">${renderBadge(c)}</div>
+        <div class="chip-code">${c.code}</div>
+        ${arrow}
+      `;
+      grid.appendChild(chip);
+    });
+    board.appendChild(grid);
+  }
+
+  function renderDetailPanel(){
+    if(!selectedCode){
+      detailPanel.innerHTML = '<div class="empty">Bir kur veya coin seç.</div>';
+      return;
+    }
+    const c = findAsset(selectedCode);
+    const val = rates[selectedCode];
+    if(!c || val === undefined){
+      detailPanel.innerHTML = `<div class="empty">${selectedCode} için veri yok.</div>`;
+      return;
+    }
+    const decimals = val >= 100 ? 2 : 4;
+    const ch = changes[selectedCode] || {};
+    detailPanel.innerHTML = `
+      <div class="detail-head">
+        <div class="badge">${renderBadge(c)}</div>
+        <div>
+          <div class="detail-code">${c.code}/TRY</div>
+          <div class="detail-name">${c.name}</div>
+        </div>
+      </div>
+      <div class="detail-value" id="detailValueNum">${val.toLocaleString('tr-TR', {maximumFractionDigits:decimals})} <span style="font-size:14px; color:var(--text-lo); font-weight:400;">TRY</span></div>
+      <div class="detail-changes">
+        ${renderChangeChip('1S', ch.h1)}
+        ${renderChangeChip('1G', ch.d1)}
+        ${renderChangeChip('1H', ch.w1)}
+        ${renderChangeChip('1A', ch.m1)}
+      </div>
+    `;
+    const dv = document.getElementById('detailValueNum');
+    dv.classList.add('pulse');
+    setTimeout(()=> dv.classList.remove('pulse'), 180);
+  }
+
+  board.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip-asset');
+    if(!chip || chip.classList.contains('unavailable')) return;
+    selectedCode = chip.dataset.code;
+    renderBoard();
+    renderDetailPanel();
+  });
+
+  function round(n){
+    if(n === 0) return 0;
+    if(n >= 100) return Math.round(n * 100) / 100;
+    return Math.round(n * 10000) / 10000;
+  }
+
+  function renderConverter(){
+    const amount = parseFloat(amountFrom.value) || 0;
+    const from = fromSelect.value, to = toSelect.value;
+    const rateFrom = rates[from], rateTo = rates[to];
+    if(rateFrom === undefined || rateTo === undefined){
+      convResultBig.textContent = 'veri yok';
+      convResultSub.textContent = '';
+      return;
+    }
+    const result = round((amount * rateFrom) / rateTo);
+    convResultBig.textContent = result.toLocaleString('tr-TR', {maximumFractionDigits: result >= 100 ? 2 : 4}) + ' ' + to;
+    convResultSub.textContent = '1 ' + from + ' = ' + round(rateFrom / rateTo).toLocaleString('tr-TR', {maximumFractionDigits:4}) + ' ' + to;
+    convResultBig.classList.add('pulse');
+    setTimeout(()=> convResultBig.classList.remove('pulse'), 180);
+  }
+
+  let convLogTimer = null;
+  function scheduleLogConversion(){
+    clearTimeout(convLogTimer);
+    convLogTimer = setTimeout(logConversion, 900);
+  }
+  async function logConversion(){
+    const amount = parseFloat(amountFrom.value) || 0;
+    if(amount <= 0) return;
+    const from = fromSelect.value, to = toSelect.value;
+    const rateFrom = rates[from], rateTo = rates[to];
+    if(rateFrom === undefined || rateTo === undefined) return;
+    const result = round((amount * rateFrom) / rateTo);
+    const last = convHistory[0];
+    if(last && last.from === from && last.to === to && last.amount === amount) return;
+    convHistory.unshift({ amount, from, to, result, t: Date.now() });
+    if(convHistory.length > 30) convHistory.pop();
+    await saveConvHistory();
+    renderConvHistory();
+  }
+
+  function renderAlarmCurrentRate(){
+    const code = alarmCurrency.value;
+    const val = rates[code];
+    if(val === undefined){
+      alarmCurrentRate.textContent = code + ' için veri yok';
+      return;
+    }
+    const decimals = val >= 100 ? 2 : 4;
+    alarmCurrentRate.textContent = 'Güncel kur: 1 ' + code + ' = ' + val.toLocaleString('tr-TR', {maximumFractionDigits:decimals}) + ' TRY';
+  }
+
+  async function loadAlarms(){
+    try{
+      const res = await window.storage.get('alarms');
+      alarms = res ? JSON.parse(res.value) : [];
+    }catch(e){ alarms = []; }
+  }
+  async function saveAlarms(){
+    try{ await window.storage.set('alarms', JSON.stringify(alarms)); }catch(e){}
+  }
+
+  async function loadConvHistory(){
+    try{
+      const res = await window.storage.get('convHistory');
+      convHistory = res ? JSON.parse(res.value) : [];
+    }catch(e){ convHistory = []; }
+  }
+  async function saveConvHistory(){
+    try{ await window.storage.set('convHistory', JSON.stringify(convHistory)); }catch(e){}
+  }
+
+  const directionLabel = { above:'Üzerine çıkınca', below:'Altına düşünce', either:'İkisi de' };
+  const frequencyLabel = { instant:'Anlık', hourly:'Saatte 1', daily:'Günde 1' };
+
+  function renderAlarms(){
+    const scoped = alarms.filter(a => currentAssetList().some(c => c.code === a.currency));
+    if(scoped.length === 0){
+      alarmList.innerHTML = '<div class="empty">Bu sekmede henüz alarm yok.</div>';
+      return;
+    }
+    alarmList.innerHTML = '';
+    scoped.forEach((a)=>{
+      const idx = alarms.indexOf(a);
+      const current = rates[a.currency];
+      const sub = current !== undefined ? `Şu an: ${current.toLocaleString('tr-TR', {maximumFractionDigits:4})} TRY` : 'Bekleniyor…';
+      const item = document.createElement('div');
+      item.className = 'alarm-item';
+      item.innerHTML = `
+        <div class="alarm-item-top">
+          <div>
+            <div class="alarm-text">${a.currency}/TRY → ${a.target.toLocaleString('tr-TR')}</div>
+            <div class="alarm-sub">${sub}</div>
+          </div>
+          <button class="alarm-del" data-idx="${idx}" aria-label="Sil">✕</button>
+        </div>
+        <div class="alarm-tags">
+          <span class="alarm-tag">${directionLabel[a.direction] || directionLabel.either}</span>
+          <span class="alarm-tag">${frequencyLabel[a.frequency] || frequencyLabel.instant}</span>
+        </div>
+      `;
+      alarmList.appendChild(item);
+    });
+    alarmList.querySelectorAll('.alarm-del').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const idx = parseInt(e.target.closest('.alarm-del').dataset.idx, 10);
+        alarms.splice(idx, 1);
+        await saveAlarms();
+        renderAlarms();
+      });
+    });
+  }
+
+  function checkAlarms(){
+    const now = Date.now();
+    const cooldowns = { instant: 0, hourly: 3600000, daily: 86400000 };
+    let changed = false;
+    alarms.forEach(a=>{
+      const val = rates[a.currency];
+      if(val === undefined) return;
+      const dir = a.direction || 'either';
+      let met = false;
+      if(dir === 'above') met = val >= a.target;
+      else if(dir === 'below') met = val <= a.target;
+      else met = (val >= a.target) || (val <= a.target);
+      if(!met) return;
+      const cooldown = cooldowns[a.frequency] ?? 0;
+      if(a.lastNotified && (now - a.lastNotified) < cooldown) return;
+      a.lastNotified = now;
+      changed = true;
+      showToast(`${a.currency}/TRY ${a.target} hedefine ulaştı: ${val.toLocaleString('tr-TR', {maximumFractionDigits:4})}`);
+      if(window.Notification && Notification.permission === 'granted'){
+        new Notification('Kur Tahtası', { body: `${a.currency}/TRY ${a.target} hedefine ulaştı — şu an ${val.toFixed(4)}` });
+      }
+    });
+    if(changed) saveAlarms();
+    renderAlarms();
+  }
+
+  function renderConvHistory(){
+    if(convHistory.length === 0){
+      convHistList.innerHTML = '<div class="empty">Henüz çevirme yapmadın. Yukarıdaki çeviriciyi kullandıkça burada birikecek.</div>';
+      return;
+    }
+    convHistList.innerHTML = '';
+    convHistory.forEach((h, idx)=>{
+      const time = new Date(h.t).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+      const date = new Date(h.t).toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit'});
+      const fromAsset = findAsset(h.from);
+      const icon = renderBadge(fromAsset);
+      const item = document.createElement('div');
+      item.className = 'hist-item';
+      item.innerHTML = `
+        <div class="hist-left">
+          <div class="hist-icon">${icon}</div>
+          <div>
+            <div class="hist-conv">${h.amount.toLocaleString('tr-TR')} ${h.from} → ${h.result.toLocaleString('tr-TR', {maximumFractionDigits: h.result >= 100 ? 2 : 4})} ${h.to}</div>
+            <div class="hist-time">${date} · ${time}</div>
+          </div>
+        </div>
+        <button class="hist-del" data-idx="${idx}" aria-label="Sil">✕</button>
+      `;
+      convHistList.appendChild(item);
+    });
+    convHistList.querySelectorAll('.hist-del').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const idx = parseInt(e.target.closest('.hist-del').dataset.idx, 10);
+        convHistory.splice(idx, 1);
+        await saveConvHistory();
+        renderConvHistory();
+      });
+    });
+  }
+
+  tabFiat.addEventListener('click', ()=> setTab('fiat'));
+  tabCrypto.addEventListener('click', ()=> setTab('crypto'));
+  refreshBtn.addEventListener('click', fetchRates);
+
+  amountFrom.addEventListener('input', ()=>{ renderConverter(); scheduleLogConversion(); });
+  fromSelect.addEventListener('change', ()=>{ renderConverter(); scheduleLogConversion(); });
+  toSelect.addEventListener('change', ()=>{ renderConverter(); scheduleLogConversion(); });
+  swapBtn.addEventListener('click', ()=>{
+    const f = fromSelect.value, t = toSelect.value;
+    const options = Array.from(fromSelect.options).map(o=>o.value);
+    fromSelect.value = options.includes(t) ? t : fromSelect.value;
+    toSelect.value = Array.from(toSelect.options).map(o=>o.value).includes(f) ? f : 'TRY';
+    renderConverter();
+    scheduleLogConversion();
+  });
+
+  alarmCurrency.addEventListener('change', renderAlarmCurrentRate);
+
+  document.getElementById('quickChips').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    amountFrom.value = chip.dataset.amt;
+    renderConverter();
+    scheduleLogConversion();
+  });
+
+  clearHistBtn.addEventListener('click', async ()=>{
+    convHistory = [];
+    await saveConvHistory();
+    renderConvHistory();
+  });
+
+  document.getElementById('alarmAddBtn').addEventListener('click', async ()=>{
+    const currency = alarmCurrency.value;
+    const target = parseFloat(alarmTarget.value);
+    if(!target || target <= 0){
+      showToast('Geçerli bir hedef kur gir');
+      return;
+    }
+    alarms.push({
+      currency,
+      target,
+      direction: alarmDirection.value,
+      frequency: alarmFrequency.value,
+      lastNotified: null
+    });
+    await saveAlarms();
+    renderAlarms();
+    alarmTarget.value = '';
+    if(window.Notification && Notification.permission === 'default'){
+      Notification.requestPermission();
+    }
+    showToast('Alarm eklendi');
+  });
+
+  async function init(){
+    refreshScopedSelects();
+    await loadAlarms();
+    await loadConvHistory();
+    renderConvHistory();
+    renderAlarms();
+    renderAlarmCurrentRate();
+    await fetchRates();
+    setInterval(fetchRates, 60000);
+  }
+  init();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+</script>
+</body>
+</html>
