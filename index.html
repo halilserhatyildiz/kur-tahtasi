@@ -196,7 +196,7 @@
   }
   .chip-asset.unavailable{opacity:.35; cursor:default;}
   .chip-asset .badge{width:26px; height:26px; font-size:13px;}
-  .chip-code{font-size:10.5px; font-weight:600; color:var(--text-hi);}
+  .chip-code{font-size:10.5px; font-weight:600; color:var(--text-hi); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .chip-arrow{font-size:9px; font-weight:700;}
   .chip-arrow.up{color:var(--green);}
   .chip-arrow.down{color:var(--red);}
@@ -571,40 +571,30 @@
     border-radius:8px;
     padding:10px 0;
   }
-  .compare-selects{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:6px;
-    margin-top:10px;
-  }
-  .compare-selects select{width:100%; flex:none;}
-  .compare-results{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:6px;
-    margin-top:10px;
-  }
-  .compare-card{
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:10px 6px;
-    text-align:center;
-  }
-  .compare-card-head{
+  .compare-rows{margin-top:10px;}
+  .compare-row{
     display:flex;
-    flex-direction:column;
     align-items:center;
-    gap:4px;
-    margin-bottom:6px;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
   }
-  .compare-code{font-size:11px; font-weight:700; color:var(--text-label);}
-  .compare-value{
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row select{
+    flex:1;
+    min-width:0;
+    max-width:130px;
+  }
+  .compare-row-value{
+    flex:1;
+    text-align:right;
     font-family:'Space Mono',monospace;
-    font-size:14px;
+    font-size:15px;
     font-weight:700;
     color:var(--amber);
-    word-break:break-word;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
 
   .footnote{
@@ -913,17 +903,12 @@
 
   <div class="section-title">KARŞILAŞTIR</div>
   <div class="card">
-    <div class="compare-intro">Elindeki TL tutarını gir, hangi kur/coin'den ne kadar alacağını yan yana gör.</div>
+    <div class="compare-intro">Elindeki TL tutarını gir, 3 kur/coin'i yan yana karşılaştır.</div>
     <div class="conv-row">
       <input type="number" id="compareAmount" value="1000" inputmode="decimal">
       <span class="compare-try-label">TRY</span>
     </div>
-    <div class="compare-selects" id="compareSelects">
-      <select data-slot="0"></select>
-      <select data-slot="1"></select>
-      <select data-slot="2"></select>
-    </div>
-    <div class="compare-results" id="compareResults"></div>
+    <div class="compare-rows" id="compareRows"></div>
   </div>
 
   <div class="section-title">ALARMLAR</div>
@@ -1070,7 +1055,7 @@
     { code:'CEYREK', name:'Çeyrek Altın (yaklaşık)', icon:'🥇', approx:true, weight:1.75 },
     { code:'YARIM', name:'Yarım Altın (yaklaşık)', icon:'🥇', approx:true, weight:3.5 },
     { code:'TAM', name:'Tam Altın (yaklaşık)', icon:'🥇', approx:true, weight:7.0 },
-    { code:'CUMHURIYET', name:'Cumhuriyet Altını (yaklaşık)', icon:'🥇', approx:true, weight:7.216 },
+    { code:'CUMHURIYET', short:'CUMH', name:'Cumhuriyet Altını (yaklaşık)', icon:'🥇', approx:true, weight:7.216 },
     { code:'ONS', name:'Ons Altın (XAU)', icon:'🌕' },
     { code:'GUMUS', name:'Gümüş (gram)', icon:'⚪' }
   ];
@@ -1112,8 +1097,7 @@
   const convHistList = document.getElementById('convHistList');
   const clearHistBtn = document.getElementById('clearHistBtn');
   const compareAmount = document.getElementById('compareAmount');
-  const compareSelectsWrap = document.getElementById('compareSelects');
-  const compareResults = document.getElementById('compareResults');
+  const compareRowsEl = document.getElementById('compareRows');
   const toast = document.getElementById('toast');
 
   const COMPARE_DEFAULTS = { fiat: ['USD','EUR','GBP'], crypto: ['BTC','ETH','SOL'], gold: ['GRAM','ONS','GUMUS'] };
@@ -1177,51 +1161,45 @@
     }
   }
 
-  function fillCompareSelects(){
+  function compareOptionList(){
     const options = currentAssetList().filter(c => c.available !== false);
     const extra = activeTab === 'crypto' ? [{code:'USD', name:'Amerikan Doları'}] : [];
-    const allOptions = [...options, ...extra];
-    compareSelectsWrap.querySelectorAll('select').forEach((sel, i)=>{
-      sel.innerHTML = '';
-      allOptions.forEach(c=>{
-        const o = document.createElement('option');
-        o.value = c.code; o.textContent = c.code;
-        sel.appendChild(o);
-      });
-      const wanted = compareCodes[i];
-      if(wanted && allOptions.some(c => c.code === wanted)){
-        sel.value = wanted;
-      }else{
-        sel.value = allOptions[i % allOptions.length].code;
-        compareCodes[i] = sel.value;
-      }
-    });
+    return [...options, ...extra];
   }
 
   function renderCompare(){
+    const allOptions = compareOptionList();
+    compareCodes = compareCodes.map((code, i) => {
+      if(code && allOptions.some(c => c.code === code)) return code;
+      return allOptions[i % allOptions.length].code;
+    });
     const amount = parseFloat(compareAmount.value) || 0;
-    compareResults.innerHTML = compareCodes.map(code=>{
-      const asset = findAsset(code);
+
+    compareRowsEl.innerHTML = compareCodes.map((code, i)=>{
+      const asset = findAsset(code) || { code, name: code };
       const rate = rates[code];
-      if(!asset || rate === undefined){
-        return `<div class="compare-card"><div class="compare-code">${code}</div><div class="compare-value" style="color:var(--text-lo); font-size:11px;">veri yok</div></div>`;
-      }
-      const units = amount / rate;
-      const decimals = units >= 100 ? 2 : 4;
+      const optionsHtml = allOptions.map(c =>
+        `<option value="${c.code}" ${c.code === code ? 'selected' : ''}>${c.short || c.code}</option>`
+      ).join('');
+      const valueHtml = rate === undefined
+        ? `<span class="compare-row-value" style="color:var(--text-lo); font-size:12px;">veri yok</span>`
+        : (() => {
+            const units = amount / rate;
+            const decimals = units >= 100 ? 2 : 4;
+            return `<span class="compare-row-value">${units.toLocaleString('tr-TR', {maximumFractionDigits:decimals})}</span>`;
+          })();
       return `
-        <div class="compare-card">
-          <div class="compare-card-head">
-            <div class="badge">${renderBadge(asset)}</div>
-            <div class="compare-code">${code}</div>
-          </div>
-          <div class="compare-value">${units.toLocaleString('tr-TR', {maximumFractionDigits:decimals})}</div>
+        <div class="compare-row">
+          <div class="badge">${renderBadge(asset)}</div>
+          <select data-slot="${i}">${optionsHtml}</select>
+          ${valueHtml}
         </div>
       `;
     }).join('');
   }
 
   compareAmount.addEventListener('input', renderCompare);
-  compareSelectsWrap.addEventListener('change', (e)=>{
+  compareRowsEl.addEventListener('change', (e)=>{
     const sel = e.target.closest('select');
     if(!sel) return;
     const slot = parseInt(sel.dataset.slot, 10);
@@ -1238,7 +1216,6 @@
     tabCrypto.classList.toggle('active', tab === 'crypto');
     tabGold.classList.toggle('active', tab === 'gold');
     refreshScopedSelects();
-    fillCompareSelects();
     renderBoard();
     renderDetailPanel();
     renderConverter();
@@ -1362,6 +1339,50 @@
     }
   }
 
+  // freegoldapi.com: anahtar istemiyor, CORS'a açık, USD cinsinden onsun günlük geçmişini veriyor.
+  // Bunu, Frankfurter'dan çektiğimiz geçmiş USD/TRY kuruyla birleştirip TL bazlı altın grafiği üretiyoruz.
+  let goldHistoryCache = null;
+
+  async function fetchGoldChartDays(code, days){
+    if(!goldHistoryCache){
+      const res = await fetch('https://freegoldapi.com/data/latest.json');
+      if(!res.ok) throw new Error('gold history fetch failed');
+      goldHistoryCache = await res.json();
+    }
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - days);
+    const fmt = d => d.toISOString().slice(0, 10);
+    const startStr = fmt(start), endStr = fmt(end);
+
+    const goldPoints = goldHistoryCache.filter(d => d.date >= startStr && d.date <= endStr);
+    if(!goldPoints.length) throw new Error('no gold data in range');
+
+    const fxPoints = await fetchFiatChartRange('USD', start, end);
+    if(!fxPoints.length) throw new Error('no fx data in range');
+    function nearestFx(dateStr){
+      const target = new Date(dateStr).getTime();
+      let closest = fxPoints[0], minDiff = Math.abs(closest.t - target);
+      fxPoints.forEach(p=>{
+        const diff = Math.abs(p.t - target);
+        if(diff < minDiff){ minDiff = diff; closest = p; }
+      });
+      return closest.v;
+    }
+
+    const asset = GOLD.find(g => g.code === code);
+    return goldPoints.map(d=>{
+      const usdOz = d.price;
+      const usdTryAtDate = nearestFx(d.date);
+      let usdVal;
+      if(code === 'ONS') usdVal = usdOz;
+      else if(code === 'GRAM') usdVal = usdOz / GRAM_PER_OUNCE;
+      else if(asset && asset.approx) usdVal = (usdOz / GRAM_PER_OUNCE) * (22 / 24) * asset.weight;
+      else return null;
+      return { t: new Date(d.date).getTime(), v: usdVal * usdTryAtDate };
+    }).filter(Boolean);
+  }
+
 
   let lastFetchTime = null;
   let secondsUntilNext = 60;
@@ -1438,7 +1459,7 @@
       }
       chip.innerHTML = `
         <div class="badge">${renderBadge(c)}</div>
-        <div class="chip-code">${c.code}</div>
+        <div class="chip-code">${c.short || c.code}</div>
         ${arrow}
       `;
       grid.appendChild(chip);
@@ -1498,7 +1519,7 @@
       </div>
       <div class="chart-area" id="detailChartArea">
         <div class="empty" style="padding:30px 0;">Grafik yükleniyor…</div>
-      </div>` : `<div class="empty" style="padding:16px 0 4px;">Altın için grafik yakında eklenecek.</div>`}
+      </div>` : `<div class="empty" style="padding:16px 0 4px;">Gümüş için grafik verisi şu an yok, diğer altın türlerinde mevcut.</div>`}
     `;
     const dv = document.getElementById('detailValueNum');
     dv.classList.add('pulse');
@@ -1507,7 +1528,10 @@
   }
 
   function chartRangesFor(code){
-    if(GOLD.some(c => c.code === code)) return [];
+    if(code === 'GUMUS') return [];
+    if(GOLD.some(c => c.code === code)){
+      return [{key:'30', label:'1A'}, {key:'180', label:'6A'}, {key:'365', label:'1Y'}];
+    }
     const isCrypto = CRYPTO.some(c => c.code === code);
     const base = isCrypto
       ? [{key:'1', label:'24S'}, {key:'7', label:'7G'}, {key:'30', label:'1A'}]
@@ -1702,6 +1726,7 @@
 
   async function loadChart(code){
     const isCrypto = CRYPTO.some(c => c.code === code);
+    const isGold = GOLD.some(c => c.code === code);
     const asset = findAsset(code);
     let cacheKey, fetchPromise, isIntraday;
 
@@ -1718,7 +1743,11 @@
       const end = new Date();
       const start = new Date(end);
       start.setDate(start.getDate() - days);
-      fetchPromise = isCrypto ? fetchCryptoChartDays(asset.id, days) : fetchFiatChartRange(code, start, end);
+      if(isGold){
+        fetchPromise = fetchGoldChartDays(code, days);
+      }else{
+        fetchPromise = isCrypto ? fetchCryptoChartDays(asset.id, days) : fetchFiatChartRange(code, start, end);
+      }
     }
 
     const area = document.getElementById('detailChartArea');
@@ -2137,7 +2166,6 @@
 
   async function init(){
     refreshScopedSelects();
-    fillCompareSelects();
     await loadAlarms();
     await loadConvHistory();
     renderConvHistory();
