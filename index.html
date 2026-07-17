@@ -525,6 +525,34 @@
   .whatif-value.down{color:var(--red);}
   .whatif-sub{font-size:11px; color:var(--text-lo); margin-top:2px;}
 
+  .header-link{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-top:14px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--text-hi);
+    cursor:pointer;
+  }
+  .header-link:active{transform:scale(0.98);}
+  .header-link-arrow{color:var(--amber); font-size:16px;}
+  #closeWhatifBtn{
+    justify-content:flex-start;
+    gap:8px;
+    color:var(--text-label);
+    font-weight:600;
+    margin-bottom:4px;
+    display:inline-flex;
+    background:none;
+    border:none;
+    padding:8px 0;
+  }
+
   .compare-intro{
     font-size:12px;
     color:var(--text-lo);
@@ -844,6 +872,13 @@
   </div>
   <div class="countdown" id="updatedText">Yükleniyor…</div>
 
+  <div class="header-link" id="openWhatifBtn">
+    <span>🕰️ Geçmişte Ne Olurdu?</span>
+    <span class="header-link-arrow">›</span>
+  </div>
+
+  <div id="mainView">
+
   <div class="tabs">
     <button class="tab-btn active" id="tabFiat">DÖVİZ</button>
     <button class="tab-btn" id="tabCrypto">KRİPTO</button>
@@ -854,22 +889,6 @@
     <div class="empty" style="padding:24px;">Yükleniyor…</div>
   </div>
   <div class="detail-panel" id="detailPanel"></div>
-
-  <div class="section-title">GEÇMİŞTE NE OLURDU?</div>
-  <div class="card">
-    <div class="compare-intro" id="whatifAssetLabel">Yukarıdan bir kur/coin seç, o varlık üzerinden hesaplayalım.</div>
-    <div class="conv-row">
-      <input type="number" id="whatifAmount" value="1000" inputmode="decimal">
-      <span class="compare-try-label" id="whatifUnitLabel">USD</span>
-    </div>
-    <div class="chart-toggle" id="whatifPeriods" style="margin-top:10px;">
-      <button data-days="30" class="">1A</button>
-      <button data-days="180" class="">6A</button>
-      <button data-days="365" class="active">1Y</button>
-      <button data-days="1825" class="">5Y</button>
-    </div>
-    <div class="whatif-results" id="whatifResults"></div>
-  </div>
 
   <div class="section-title">ÇEVİRİCİ</div>
   <div class="card">
@@ -943,6 +962,34 @@
 
   <div class="footnote">
     <b>Not:</b> Döviz kurları Avrupa Merkez Bankası referans verisine dayanır ve iş günlerinde günde bir kez güncellenir — anlık banka/dövizci kuru değildir, bu yüzden dövizde 1 saatlik değişim "—" görünür. Kripto fiyatları piyasadan dakikada bir çekilir ve gerçek zamanlıya yakındır, 1 saatlik değişim de gösterilir. Gösterilen değerler orta piyasa fiyatıdır. Rus Rublesi ve Tayvan Doları için ücretsiz veri kaynağımızda kur bulunmuyor, bu ikisi "veri yok" olarak görünür. Bir satıra dokunarak güncel değeri ve değişim yüzdelerini görebilirsin. Altın bölümündeki Gram ve Ons fiyatları gerçek piyasa verisidir; Çeyrek/Yarım/Tam/Cumhuriyet altını ise standart ağırlık üzerinden hesaplanan yaklaşık değerlerdir, kuyumcu işçilik farkı fiyata dahil değildir.
+  </div>
+
+  </div>
+
+  <div id="whatifPage" style="display:none;">
+    <div class="header-link" id="closeWhatifBtn">
+      <span>‹ Geri</span>
+    </div>
+    <h1 style="font-size:20px; margin-bottom:16px;">Geçmişte Ne Olurdu?</h1>
+    <div class="card">
+      <div class="compare-intro">Bir kur veya coin seç, miktar gir, hangi zaman diliminde ne kazanır/kaybederdin görelim.</div>
+      <div class="conv-row">
+        <select id="whatifCodeSelect" style="flex:1;"></select>
+        <input type="number" id="whatifAmount" value="1000" inputmode="decimal" style="flex:1;">
+      </div>
+      <div class="chart-toggle" id="whatifPeriods" style="margin-top:10px;">
+        <button data-days="30" class="">1A</button>
+        <button data-days="180" class="">6A</button>
+        <button data-days="365" class="active">1Y</button>
+        <button data-days="1825" class="">5Y</button>
+        <button data-days="custom" class="">Özel</button>
+      </div>
+      <div class="custom-range-form" id="whatifCustomForm" style="display:none;">
+        <input type="date" id="whatifCustomDate">
+        <button class="btn" id="whatifCustomApplyBtn" style="flex:0 0 auto;">Uygula</button>
+      </div>
+      <div class="whatif-results" id="whatifResults"></div>
+    </div>
   </div>
 
   </div>
@@ -1198,8 +1245,6 @@
     renderCompare();
     renderAlarms();
     renderAlarmCurrentRate();
-    renderWhatifHead();
-    computeWhatIf();
   }
   function currentAssetListFor(tab){
     if(tab === 'fiat') return FIAT;
@@ -1527,39 +1572,79 @@
 
   const PERIOD_LABELS = { '30':'1 ay', '180':'6 ay', '365':'1 yıl', '1825':'5 yıl' };
   let whatifDays = '365';
+  let whatifCode = 'USD';
+  let whatifCustomDateStr = null;
   let whatifRequestId = 0;
 
-  function renderWhatifHead(){
-    const label = document.getElementById('whatifAssetLabel');
-    const unit = document.getElementById('whatifUnitLabel');
-    if(!label || !unit) return;
-    if(!selectedCode || GOLD.some(g => g.code === selectedCode)){
-      label.textContent = 'Bu hesaplama şu an döviz ve kripto için çalışıyor, altın için yakında.';
-      unit.textContent = '—';
-      return;
+  function fillWhatifSelect(){
+    const sel = document.getElementById('whatifCodeSelect');
+    if(!sel) return;
+    sel.innerHTML = '';
+    const groupFiat = document.createElement('optgroup');
+    groupFiat.label = 'Döviz';
+    FIAT.filter(c => c.available !== false).forEach(c=>{
+      const o = document.createElement('option');
+      o.value = c.code; o.textContent = c.code;
+      groupFiat.appendChild(o);
+    });
+    const groupCrypto = document.createElement('optgroup');
+    groupCrypto.label = 'Kripto';
+    CRYPTO.forEach(c=>{
+      const o = document.createElement('option');
+      o.value = c.code; o.textContent = c.code;
+      groupCrypto.appendChild(o);
+    });
+    sel.appendChild(groupFiat);
+    sel.appendChild(groupCrypto);
+    if(!FIAT.some(c=>c.code===whatifCode) && !CRYPTO.some(c=>c.code===whatifCode)){
+      whatifCode = 'USD';
     }
-    const c = findAsset(selectedCode);
-    label.textContent = `${c.code} biriminden ne kadar alsaydın, geçmişte ve bugün ne ederdi, hesaplayalım.`;
-    unit.textContent = c.code;
+    sel.value = whatifCode;
   }
+
+  function openWhatifPage(){
+    if(selectedCode && (FIAT.some(c=>c.code===selectedCode) || CRYPTO.some(c=>c.code===selectedCode))){
+      whatifCode = selectedCode;
+    }
+    fillWhatifSelect();
+    document.getElementById('mainView').style.display = 'none';
+    document.getElementById('whatifPage').style.display = 'block';
+    computeWhatIf();
+  }
+  function closeWhatifPage(){
+    document.getElementById('whatifPage').style.display = 'none';
+    document.getElementById('mainView').style.display = '';
+  }
+  document.getElementById('openWhatifBtn').addEventListener('click', openWhatifPage);
+  document.getElementById('closeWhatifBtn').addEventListener('click', closeWhatifPage);
 
   async function computeWhatIf(){
     const resultsEl = document.getElementById('whatifResults');
     if(!resultsEl) return;
-    if(!selectedCode || GOLD.some(g => g.code === selectedCode)){
-      resultsEl.innerHTML = '';
-      return;
-    }
     const amount = parseFloat(document.getElementById('whatifAmount').value) || 0;
     if(amount <= 0){ resultsEl.innerHTML = ''; return; }
-    const code = selectedCode;
-    const days = parseInt(whatifDays, 10);
+    const code = whatifCode;
+
+    let days, periodLabel;
+    if(whatifDays === 'custom'){
+      if(!whatifCustomDateStr){
+        resultsEl.innerHTML = '<div class="empty" style="padding:16px 0;">Bir tarih seç ve Uygula\'ya bas.</div>';
+        return;
+      }
+      const target = new Date(whatifCustomDateStr);
+      days = Math.max(1, Math.round((Date.now() - target.getTime()) / 86400000));
+      periodLabel = new Date(whatifCustomDateStr).toLocaleDateString('tr-TR', {day:'2-digit', month:'long', year:'numeric'});
+    }else{
+      days = parseInt(whatifDays, 10);
+      periodLabel = PERIOD_LABELS[whatifDays] || '';
+    }
+
     const myRequestId = ++whatifRequestId;
     resultsEl.innerHTML = '<div class="empty" style="padding:16px 0;">Hesaplanıyor…</div>';
     try{
       const pastRate = await getHistoricalRate(code, days);
       const currentRate = rates[code];
-      if(myRequestId !== whatifRequestId) return; // kullanıcı bu sırada değiştirdi
+      if(myRequestId !== whatifRequestId) return;
       if(currentRate === undefined) throw new Error('current rate missing');
       const pastValue = amount * pastRate;
       const currentValue = amount * currentRate;
@@ -1567,10 +1652,10 @@
       const gainPct = pastValue !== 0 ? (gain / pastValue) * 100 : 0;
       const gainClass = gain > 0 ? 'up' : (gain < 0 ? 'down' : '');
       const gainSign = gain > 0 ? '+' : '';
-      const periodLabel = PERIOD_LABELS[whatifDays] || '';
+      const periodText = whatifDays === 'custom' ? periodLabel + ' tarihinde' : periodLabel + ' önce';
       resultsEl.innerHTML = `
         <div class="whatif-card">
-          <div class="whatif-label">${periodLabel} önce öderdin</div>
+          <div class="whatif-label">${periodText} öderdin</div>
           <div class="whatif-value">${pastValue.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY</div>
         </div>
         <div class="whatif-card">
@@ -1580,7 +1665,7 @@
         <div class="whatif-card wide">
           <div class="whatif-label">Kazanç / Kayıp</div>
           <div class="whatif-value ${gainClass}">${gainSign}${gain.toLocaleString('tr-TR', {maximumFractionDigits:2})} TRY <span style="font-size:12px;">(${gainSign}${gainPct.toFixed(1)}%)</span></div>
-          <div class="whatif-sub">${amount.toLocaleString('tr-TR')} ${code}, ${periodLabel} önce alınıp bugün elde tutulsaydı</div>
+          <div class="whatif-sub">${amount.toLocaleString('tr-TR')} ${code}, ${periodText} alınıp bugün elde tutulsaydı</div>
         </div>
       `;
     }catch(err){
@@ -1594,11 +1679,23 @@
     clearTimeout(whatifTimer);
     whatifTimer = setTimeout(computeWhatIf, 600);
   });
+  document.getElementById('whatifCodeSelect').addEventListener('change', (e)=>{
+    whatifCode = e.target.value;
+    computeWhatIf();
+  });
   document.getElementById('whatifPeriods').addEventListener('click', (e)=>{
     const btn = e.target.closest('button');
     if(!btn) return;
     whatifDays = btn.dataset.days;
     document.querySelectorAll('#whatifPeriods button').forEach(b => b.classList.toggle('active', b === btn));
+    const customForm = document.getElementById('whatifCustomForm');
+    customForm.style.display = whatifDays === 'custom' ? 'flex' : 'none';
+    if(whatifDays !== 'custom') computeWhatIf();
+  });
+  document.getElementById('whatifCustomApplyBtn').addEventListener('click', ()=>{
+    const val = document.getElementById('whatifCustomDate').value;
+    if(!val){ showToast('Bir tarih seç'); return; }
+    whatifCustomDateStr = val;
     computeWhatIf();
   });
 
@@ -1779,8 +1876,6 @@
     selectedCode = chip.dataset.code;
     renderBoard();
     renderDetailPanel();
-    renderWhatifHead();
-    computeWhatIf();
   });
 
   function round(n){
