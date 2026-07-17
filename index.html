@@ -453,6 +453,40 @@
     border-color:var(--amber);
   }
   .chart-area{min-height:110px;}
+  .chart-tooltip{
+    position:absolute;
+    top:0; left:0;
+    background:var(--panel-2);
+    border:1px solid var(--amber-dim);
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:11px;
+    pointer-events:none;
+    opacity:0;
+    white-space:nowrap;
+    z-index:5;
+    transition:opacity .1s ease;
+  }
+  .chart-tooltip b{
+    display:block;
+    font-family:'Space Mono',monospace;
+    color:var(--amber);
+    font-size:12px;
+  }
+  .chart-tooltip span{color:var(--text-lo);}
+  .custom-range-form{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    margin:0 0 10px;
+  }
+  .custom-range-form input[type="date"]{
+    font-size:12px;
+    padding:8px 8px;
+    flex:1;
+    min-width:0;
+    color-scheme:dark;
+  }
   .chart-meta{
     display:flex;
     justify-content:space-between;
@@ -926,6 +960,13 @@
     const ch = changes[selectedCode] || {};
     const ranges = chartRangesFor(selectedCode);
     if(!ranges.some(r => r.key === chartRange)) chartRange = ranges[0].key;
+    if(!customStartStr || !customEndStr){
+      const end = new Date();
+      const start = new Date(end);
+      start.setDate(start.getDate() - 90);
+      customEndStr = end.toISOString().slice(0, 10);
+      customStartStr = start.toISOString().slice(0, 10);
+    }
     detailPanel.innerHTML = `
       <div class="detail-head">
         <div class="badge">${renderBadge(c)}</div>
@@ -944,6 +985,12 @@
       <div class="chart-toggle">
         ${ranges.map(r => `<button data-range="${r.key}" class="${r.key === chartRange ? 'active' : ''}">${r.label}</button>`).join('')}
       </div>
+      <div class="custom-range-form" id="customRangeForm" style="display:${chartRange === 'custom' ? 'flex' : 'none'};">
+        <input type="date" id="customStartInput" value="${customStartStr}">
+        <span style="color:var(--text-lo); font-size:12px;">—</span>
+        <input type="date" id="customEndInput" value="${customEndStr}">
+        <button class="btn" id="customApplyBtn" style="flex:0 0 auto;">Uygula</button>
+      </div>
       <div class="chart-area" id="detailChartArea">
         <div class="empty" style="padding:30px 0;">Grafik yükleniyor…</div>
       </div>
@@ -956,14 +1003,19 @@
 
   function chartRangesFor(code){
     const isCrypto = CRYPTO.some(c => c.code === code);
-    return isCrypto
+    const base = isCrypto
       ? [{key:'1', label:'24S'}, {key:'7', label:'7G'}, {key:'30', label:'1A'}]
       : [{key:'7', label:'7G'}, {key:'30', label:'1A'}];
+    return [...base, {key:'180', label:'6A'}, {key:'365', label:'1Y'}, {key:'custom', label:'Özel'}];
   }
 
   const chartCache = {};
+  let customStartStr = null;
+  let customEndStr = null;
+  let lastChartPoints = [];
+  let lastChartIsIntraday = false;
 
-  async function fetchCryptoChart(id, days){
+  async function fetchCryptoChartDays(id, days){
     const keyParam = COINGECKO_API_KEY ? `&x_cg_demo_api_key=${COINGECKO_API_KEY}` : '';
     const res = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=try&days=${days}${keyParam}`);
     if(!res.ok) throw new Error('chart fetch failed');
@@ -971,12 +1023,19 @@
     return (data.prices || []).map(p => ({ t: p[0], v: p[1] }));
   }
 
-  async function fetchFiatChart(code, days){
-    const end = new Date();
-    const start = new Date(end);
-    start.setDate(start.getDate() - days);
+  async function fetchCryptoChartRange(id, startDate, endDate){
+    const keyParam = COINGECKO_API_KEY ? `&x_cg_demo_api_key=${COINGECKO_API_KEY}` : '';
+    const from = Math.floor(startDate.getTime() / 1000);
+    const to = Math.floor(endDate.getTime() / 1000);
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart/range?vs_currency=try&from=${from}&to=${to}${keyParam}`);
+    if(!res.ok) throw new Error('chart fetch failed');
+    const data = await res.json();
+    return (data.prices || []).map(p => ({ t: p[0], v: p[1] }));
+  }
+
+  async function fetchFiatChartRange(code, startDate, endDate){
     const fmt = d => d.toISOString().slice(0, 10);
-    const res = await fetch(`https://api.frankfurter.dev/v1/${fmt(start)}..${fmt(end)}?base=TRY&symbols=${code}`);
+    const res = await fetch(`https://api.frankfurter.dev/v1/${fmt(startDate)}..${fmt(endDate)}?base=TRY&symbols=${code}`);
     if(!res.ok) throw new Error('chart fetch failed');
     const data = await res.json();
     return Object.keys(data.rates || {}).sort().map(date => ({
@@ -986,23 +1045,44 @@
   }
 
   async function loadChart(code){
-    const cacheKey = code + ':' + chartRange;
+    const isCrypto = CRYPTO.some(c => c.code === code);
+    const asset = findAsset(code);
+    let cacheKey, fetchPromise, isIntraday;
+
+    if(chartRange === 'custom'){
+      cacheKey = `${code}:custom:${customStartStr}:${customEndStr}`;
+      isIntraday = false;
+      const start = new Date(customStartStr);
+      const end = new Date(customEndStr);
+      fetchPromise = isCrypto ? fetchCryptoChartRange(asset.id, start, end) : fetchFiatChartRange(code, start, end);
+    }else{
+      cacheKey = `${code}:${chartRange}`;
+      isIntraday = chartRange === '1';
+      const days = parseInt(chartRange, 10);
+      const end = new Date();
+      const start = new Date(end);
+      start.setDate(start.getDate() - days);
+      fetchPromise = isCrypto ? fetchCryptoChartDays(asset.id, days) : fetchFiatChartRange(code, start, end);
+    }
+
     const area = document.getElementById('detailChartArea');
     if(!area) return;
+
     if(chartCache[cacheKey]){
-      area.innerHTML = renderChartSvg(chartCache[cacheKey]);
+      lastChartPoints = chartCache[cacheKey];
+      lastChartIsIntraday = isIntraday;
+      area.innerHTML = renderChartSvg(lastChartPoints);
+      attachChartInteractivity(lastChartPoints, isIntraday);
       return;
     }
     try{
-      const asset = findAsset(code);
-      const isCrypto = CRYPTO.some(c => c.code === code);
-      const points = isCrypto
-        ? await fetchCryptoChart(asset.id, chartRange)
-        : await fetchFiatChart(code, parseInt(chartRange, 10));
+      const points = await fetchPromise;
       chartCache[cacheKey] = points;
-      if(selectedCode === code && chartRange === cacheKey.split(':')[1]){
-        area.innerHTML = renderChartSvg(points);
-      }
+      if(selectedCode !== code) return;
+      lastChartPoints = points;
+      lastChartIsIntraday = isIntraday;
+      area.innerHTML = renderChartSvg(points);
+      attachChartInteractivity(points, isIntraday);
     }catch(err){
       if(selectedCode === code) area.innerHTML = '<div class="empty" style="padding:20px 0;">Grafik alınamadı.</div>';
     }
@@ -1029,10 +1109,15 @@
     const fillColor = up ? 'rgba(0,210,106,0.12)' : 'rgba(255,77,77,0.12)';
     const decimals = max >= 100 ? 2 : 4;
     return `
-      <svg viewBox="0 0 ${w} ${h}" style="width:100%; height:110px; display:block;">
-        <path d="${areaPath}" fill="${fillColor}" stroke="none"/>
-        <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      </svg>
+      <div class="chart-canvas" style="position:relative;">
+        <svg id="detailChartSvg" viewBox="0 0 ${w} ${h}" style="width:100%; height:110px; display:block; touch-action:none; cursor:crosshair;">
+          <path d="${areaPath}" fill="${fillColor}" stroke="none"/>
+          <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <line id="hoverLine" x1="0" y1="${padY}" x2="0" y2="${h - padY}" stroke="var(--text-lo)" stroke-width="1" stroke-dasharray="2,2" opacity="0"/>
+          <circle id="hoverDot" r="3.5" fill="${strokeColor}" stroke="var(--void)" stroke-width="1.5" opacity="0"/>
+        </svg>
+        <div class="chart-tooltip" id="chartTooltip"></div>
+      </div>
       <div class="chart-meta">
         <span>Düşük: ${min.toLocaleString('tr-TR', {maximumFractionDigits:decimals})}</span>
         <span>Yüksek: ${max.toLocaleString('tr-TR', {maximumFractionDigits:decimals})}</span>
@@ -1040,14 +1125,87 @@
     `;
   }
 
+  function attachChartInteractivity(points, isIntraday){
+    const svg = document.getElementById('detailChartSvg');
+    const hoverLine = document.getElementById('hoverLine');
+    const hoverDot = document.getElementById('hoverDot');
+    const tooltip = document.getElementById('chartTooltip');
+    if(!svg || !hoverLine || !hoverDot || !tooltip) return;
+
+    const w = 300, h = 110, padX = 4, padY = 10;
+    const values = points.map(p => p.v);
+    const min = Math.min(...values), max = Math.max(...values);
+    const span = (max - min) || 1;
+    const stepX = (w - padX * 2) / (points.length - 1);
+    const decimals = max >= 100 ? 2 : 4;
+
+    function showAt(clientX){
+      const rect = svg.getBoundingClientRect();
+      let fraction = (clientX - rect.left) / rect.width;
+      fraction = Math.max(0, Math.min(1, fraction));
+      const idx = Math.round(fraction * (points.length - 1));
+      const p = points[idx];
+      const x = padX + idx * stepX;
+      const y = padY + (h - padY * 2) * (1 - (p.v - min) / span);
+
+      hoverLine.setAttribute('x1', x);
+      hoverLine.setAttribute('x2', x);
+      hoverLine.setAttribute('opacity', '1');
+      hoverDot.setAttribute('cx', x);
+      hoverDot.setAttribute('cy', y);
+      hoverDot.setAttribute('opacity', '1');
+
+      const dateObj = new Date(p.t);
+      const dateStr = isIntraday
+        ? dateObj.toLocaleString('tr-TR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})
+        : dateObj.toLocaleDateString('tr-TR', {day:'2-digit', month:'short', year:'numeric'});
+      const valStr = p.v.toLocaleString('tr-TR', {maximumFractionDigits:decimals});
+
+      tooltip.innerHTML = `<b>${valStr} TRY</b><span>${dateStr}</span>`;
+      tooltip.style.opacity = '1';
+      const leftPct = (x / w) * 100;
+      tooltip.style.left = leftPct + '%';
+      tooltip.style.top = Math.max(y - 8, 4) + 'px';
+      tooltip.style.transform = `translate(${leftPct < 15 ? '0%' : leftPct > 85 ? '-100%' : '-50%'}, -100%)`;
+    }
+
+    function hide(){
+      hoverLine.setAttribute('opacity', '0');
+      hoverDot.setAttribute('opacity', '0');
+      tooltip.style.opacity = '0';
+    }
+
+    svg.addEventListener('pointermove', (e) => showAt(e.clientX));
+    svg.addEventListener('pointerdown', (e) => showAt(e.clientX));
+    svg.addEventListener('pointerleave', hide);
+  }
+
   detailPanel.addEventListener('click', (e)=>{
     const btn = e.target.closest('.chart-toggle button');
-    if(!btn) return;
-    chartRange = btn.dataset.range;
-    detailPanel.querySelectorAll('.chart-toggle button').forEach(b => b.classList.toggle('active', b === btn));
-    const area = document.getElementById('detailChartArea');
-    if(area) area.innerHTML = '<div class="empty" style="padding:30px 0;">Grafik yükleniyor…</div>';
-    loadChart(selectedCode);
+    if(btn){
+      chartRange = btn.dataset.range;
+      detailPanel.querySelectorAll('.chart-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+      const form = document.getElementById('customRangeForm');
+      if(form) form.style.display = chartRange === 'custom' ? 'flex' : 'none';
+      const area = document.getElementById('detailChartArea');
+      if(area) area.innerHTML = '<div class="empty" style="padding:30px 0;">Grafik yükleniyor…</div>';
+      loadChart(selectedCode);
+      return;
+    }
+    const applyBtn = e.target.closest('#customApplyBtn');
+    if(applyBtn){
+      const startInput = document.getElementById('customStartInput');
+      const endInput = document.getElementById('customEndInput');
+      if(startInput.value && endInput.value && startInput.value < endInput.value){
+        customStartStr = startInput.value;
+        customEndStr = endInput.value;
+        const area = document.getElementById('detailChartArea');
+        if(area) area.innerHTML = '<div class="empty" style="padding:30px 0;">Grafik yükleniyor…</div>';
+        loadChart(selectedCode);
+      }else{
+        showToast('Başlangıç tarihi bitişten önce olmalı');
+      }
+    }
   });
 
   board.addEventListener('click', (e)=>{
