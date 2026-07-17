@@ -39,6 +39,20 @@
     margin:0 auto;
     padding:20px 16px 60px;
   }
+  .header-top{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .logo-mark{
+    width:42px; height:42px;
+    border-radius:11px;
+    background:linear-gradient(160deg, var(--panel-2), var(--void));
+    border:1px solid var(--amber-dim);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--amber);
+    flex-shrink:0;
+  }
   .eyebrow{
     font-size:11px;
     letter-spacing:2.5px;
@@ -71,6 +85,35 @@
     font-size:12px;
     color:var(--text-lo);
   }
+  .status-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+  }
+  .status-chips{display:flex; gap:6px;}
+  .status-chip{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    padding:4px 9px;
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text-lo);
+  }
+  .status-chip .dot-sm{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--text-lo);
+  }
+  .status-chip.ok{color:var(--green); border-color:rgba(0,210,106,0.3);}
+  .status-chip.ok .dot-sm{background:var(--green); box-shadow:0 0 5px var(--green);}
+  .status-chip.fail{color:var(--red); border-color:rgba(255,77,77,0.3);}
+  .status-chip.fail .dot-sm{background:var(--red);}
+  .countdown{font-size:11px; color:var(--text-lo); margin-top:2px; text-align:right;}
   .refresh-btn{
     background:var(--panel);
     border:1px solid var(--border);
@@ -419,12 +462,28 @@
 </head>
 <body>
 
-  <div class="eyebrow"><span class="dot"></span>CANLI TAKİP</div>
-  <h1>Kur Tahtası</h1>
-  <div class="subrow">
-    <div class="updated" id="updatedText">Yükleniyor…</div>
+  <div class="header-top">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 7h12l-3.5-3.5"/>
+        <path d="M18 7l-3.5 3.5"/>
+        <path d="M18 17H6l3.5 3.5"/>
+        <path d="M6 17l3.5-3.5"/>
+      </svg>
+    </div>
+    <div>
+      <div class="eyebrow"><span class="dot"></span>CANLI TAKİP</div>
+      <h1>Kur Tahtası</h1>
+    </div>
+  </div>
+  <div class="status-row">
+    <div class="status-chips">
+      <span class="status-chip" id="fiatStatusChip"><span class="dot-sm"></span>DÖVİZ</span>
+      <span class="status-chip" id="cryptoStatusChip"><span class="dot-sm"></span>KRİPTO</span>
+    </div>
     <button class="refresh-btn" id="refreshBtn" aria-label="Yenile">↻</button>
   </div>
+  <div class="countdown" id="updatedText">Yükleniyor…</div>
 
   <div class="tabs">
     <button class="tab-btn active" id="tabFiat">DÖVİZ</button>
@@ -578,6 +637,8 @@
   const detailPanel = document.getElementById('detailPanel');
   const updatedText = document.getElementById('updatedText');
   const refreshBtn = document.getElementById('refreshBtn');
+  const fiatStatusChip = document.getElementById('fiatStatusChip');
+  const cryptoStatusChip = document.getElementById('cryptoStatusChip');
   const tabFiat = document.getElementById('tabFiat');
   const tabCrypto = document.getElementById('tabCrypto');
   const fromSelect = document.getElementById('fromSelect');
@@ -740,21 +801,34 @@
     }
   }
 
+  let lastFetchTime = null;
+  let secondsUntilNext = 60;
+
+  function renderStatusText(){
+    const base = secondsUntilNext > 0 ? secondsUntilNext + ' sn sonra yenilenir' : 'yenileniyor…';
+    if(!lastFetchTime){
+      updatedText.textContent = 'Yükleniyor…';
+    }else if(!fiatOk && !cryptoOk){
+      updatedText.textContent = 'Veriler alınamadı, bağlantını kontrol et';
+    }else if(!fiatOk){
+      updatedText.textContent = 'Döviz verisi alınamadı · ' + base;
+    }else if(!cryptoOk){
+      updatedText.textContent = 'Kripto verisi alınamadı · ' + base;
+    }else{
+      updatedText.textContent = base;
+    }
+  }
+
   async function fetchRates(){
     refreshBtn.classList.add('spinning');
     prevRates = { ...rates };
     await Promise.allSettled([fetchFiat(), fetchCrypto()]);
 
-    const now = new Date();
-    if(fiatOk && cryptoOk){
-      updatedText.textContent = 'Son kontrol: ' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
-    }else if(fiatOk && !cryptoOk){
-      updatedText.textContent = 'Döviz güncel, kripto verisi alınamadı (' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) + ')';
-    }else if(!fiatOk && cryptoOk){
-      updatedText.textContent = 'Kripto güncel, döviz verisi alınamadı (' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) + ')';
-    }else{
-      updatedText.textContent = 'Veriler alınamadı, bağlantını kontrol et';
-    }
+    fiatStatusChip.className = 'status-chip ' + (fiatOk ? 'ok' : 'fail');
+    cryptoStatusChip.className = 'status-chip ' + (cryptoOk ? 'ok' : 'fail');
+    lastFetchTime = new Date();
+    secondsUntilNext = 60;
+    renderStatusText();
 
     renderBoard();
     renderDetailPanel();
@@ -763,6 +837,11 @@
     renderAlarmCurrentRate();
     setTimeout(()=> refreshBtn.classList.remove('spinning'), 700);
   }
+
+  setInterval(()=>{
+    if(secondsUntilNext > 0) secondsUntilNext--;
+    renderStatusText();
+  }, 1000);
 
   function renderChangeChip(label, val){
     if(val === null || val === undefined || Number.isNaN(val)){
@@ -973,9 +1052,11 @@
       if(a.lastNotified && (now - a.lastNotified) < cooldown) return;
       a.lastNotified = now;
       changed = true;
-      showToast(`${a.currency}/TRY ${a.target} hedefine ulaştı: ${val.toLocaleString('tr-TR', {maximumFractionDigits:4})}`);
+      const emoji = val >= a.target ? '🚀' : '📉';
+      const valStr = val.toLocaleString('tr-TR', {maximumFractionDigits:4});
+      showToast(`${emoji} ${a.currency}/TRY ${a.target} hedefine ulaştı: ${valStr}`);
       if(window.Notification && Notification.permission === 'granted'){
-        new Notification('Kur Tahtası', { body: `${a.currency}/TRY ${a.target} hedefine ulaştı — şu an ${val.toFixed(4)}` });
+        new Notification(`${emoji} Kur Tahtası`, { body: `${a.currency}/TRY hedefi ${a.target} — şu an ${valStr} 💰` });
       }
     });
     if(changed) saveAlarms();
