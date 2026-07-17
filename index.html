@@ -1278,28 +1278,28 @@
     }
   }
 
-  // GoldAPI.io ücretsiz Demo plan: goldapi.io/dashboard adresinden Google ile giriş yapıp
-  // ücretsiz anahtar alabilirsin (kart istemiyor, ayda 500 istek). Aşağıya yapıştır.
-  const GOLDAPI_KEY = 'goldapi-356786500ec3136cca3e628a44d86328-io';
+  // gold-api.com: tamamen ücretsiz, anahtar istemiyor, CORS'a açık (tarayıcıdan direkt çağrılabiliyor).
   const GRAM_PER_OUNCE = 31.1035;
 
   async function fetchGold(){
-    if(!GOLDAPI_KEY){ goldOk = false; return; }
     try{
       const usdTry = rates['USD'];
       if(!usdTry) throw new Error('usd rate not ready');
       const [xauRes, xagRes] = await Promise.all([
-        fetch('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': GOLDAPI_KEY } }),
-        fetch('https://www.goldapi.io/api/XAG/USD', { headers: { 'x-access-token': GOLDAPI_KEY } })
+        fetch('https://api.gold-api.com/price/XAU'),
+        fetch('https://api.gold-api.com/price/XAG')
       ]);
-      if(!xauRes.ok || !xagRes.ok) throw new Error('goldapi failed');
+      if(!xauRes.ok || !xagRes.ok) throw new Error('gold-api failed');
       const xau = await xauRes.json();
       const xag = await xagRes.json();
 
-      const gram24kUsd = xau.price_gram_24k;
-      const gram22kUsd = xau.price_gram_22k;
-      const ounceUsd = xau.price;
-      const silverGramUsd = xag.price / GRAM_PER_OUNCE;
+      const xauUsd = xau.price ?? xau.rate ?? xau.value;
+      const xagUsd = xag.price ?? xag.rate ?? xag.value;
+      if(typeof xauUsd !== 'number' || typeof xagUsd !== 'number') throw new Error('unexpected payload');
+
+      const gram24kUsd = xauUsd / GRAM_PER_OUNCE;
+      const gram22kUsd = gram24kUsd * (22 / 24);
+      const silverGramUsd = xagUsd / GRAM_PER_OUNCE;
 
       const setRate = (code, usdVal) => {
         prevRates[code] = rates[code];
@@ -1307,7 +1307,7 @@
       };
 
       setRate('GRAM', gram24kUsd);
-      setRate('ONS', ounceUsd);
+      setRate('ONS', xauUsd);
       setRate('GUMUS', silverGramUsd);
       GOLD.filter(g => g.approx).forEach(g => setRate(g.code, gram22kUsd * g.weight));
 
