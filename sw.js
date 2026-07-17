@@ -1,5 +1,5 @@
 const CACHE_NAME = 'kur-tahtasi-v1';
-const CORE_ASSETS = ['/index.html', '/manifest.json'];
+const CORE_ASSETS = ['/', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
