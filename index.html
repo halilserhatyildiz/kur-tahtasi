@@ -568,6 +568,8 @@
   let prevRates = {};
   let changes = {};
   let selectedCode = 'USD';
+  let fiatOk = false;
+  let cryptoOk = false;
   let alarms = [];
   let convHistory = [];
   let activeTab = 'fiat';
@@ -667,80 +669,99 @@
     return tab === 'fiat' ? FIAT : CRYPTO;
   }
 
-  async function fetchRates(){
-    refreshBtn.classList.add('spinning');
+  // CoinGecko artık anonim istekleri sık sık engelliyor/kısıtlıyor.
+  // coingecko.com/api/pricing üzerinden ücretsiz "Demo API key" alıp aşağıya yapıştırırsan
+  // kripto verisi çok daha güvenilir gelir. Boş bırakırsan anahtarsız denenir (bazen çalışır, bazen 401/429 alır).
+  const COINGECKO_API_KEY = 'CG-EEi2gbHqQW8d7Ts72UJVY4vc';
+
+  async function fetchFiat(){
     try{
       const fiatCodes = FIAT.filter(c => c.available !== false).map(c => c.code).join(',');
-      const cryptoIds = CRYPTO.map(c=>c.id).join(',');
-
       const today = new Date();
       const d1 = new Date(today); d1.setDate(d1.getDate() - 1);
       const d7 = new Date(today); d7.setDate(d7.getDate() - 7);
       const d30 = new Date(today); d30.setDate(d30.getDate() - 30);
       const fmt = d => d.toISOString().slice(0, 10);
 
-      const [latestRes, d1Res, d7Res, d30Res, cryptoRes] = await Promise.all([
-        fetch(`https://api.frankfurter.app/latest?from=TRY&to=${fiatCodes}`),
-        fetch(`https://api.frankfurter.app/${fmt(d1)}?from=TRY&to=${fiatCodes}`),
-        fetch(`https://api.frankfurter.app/${fmt(d7)}?from=TRY&to=${fiatCodes}`),
-        fetch(`https://api.frankfurter.app/${fmt(d30)}?from=TRY&to=${fiatCodes}`),
-        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=try&ids=${cryptoIds}&price_change_percentage=1h,24h,7d,30d`)
+      const [latestRes, d1Res, d7Res, d30Res] = await Promise.all([
+        fetch(`https://api.frankfurter.dev/v1/latest?base=TRY&symbols=${fiatCodes}`),
+        fetch(`https://api.frankfurter.dev/v1/${fmt(d1)}?base=TRY&symbols=${fiatCodes}`),
+        fetch(`https://api.frankfurter.dev/v1/${fmt(d7)}?base=TRY&symbols=${fiatCodes}`),
+        fetch(`https://api.frankfurter.dev/v1/${fmt(d30)}?base=TRY&symbols=${fiatCodes}`)
       ]);
+      if(!latestRes.ok) throw new Error('frankfurter latest failed');
       const latestData = await latestRes.json();
       const d1Data = await d1Res.json().catch(()=>null);
       const d7Data = await d7Res.json().catch(()=>null);
       const d30Data = await d30Res.json().catch(()=>null);
-      const cryptoData = await cryptoRes.json().catch(()=>null);
 
-      prevRates = { ...rates };
-      const newRates = { TRY: 1 };
-      const newChanges = {};
-
-      Object.keys(latestData.rates || {}).forEach(code=>{
-        newRates[code] = 1 / latestData.rates[code];
-      });
       const pastRate = (data, code) => (data && data.rates && data.rates[code]) ? 1 / data.rates[code] : undefined;
       Object.keys(latestData.rates || {}).forEach(code=>{
-        const cur = newRates[code];
+        prevRates[code] = rates[code];
+        const cur = 1 / latestData.rates[code];
+        rates[code] = cur;
         const p1 = pastRate(d1Data, code), p7 = pastRate(d7Data, code), p30 = pastRate(d30Data, code);
-        newChanges[code] = {
+        changes[code] = {
           h1: null,
           d1: p1 !== undefined ? ((cur - p1) / p1) * 100 : null,
           w1: p7 !== undefined ? ((cur - p7) / p7) * 100 : null,
           m1: p30 !== undefined ? ((cur - p30) / p30) * 100 : null
         };
       });
-
-      if(Array.isArray(cryptoData)){
-        cryptoData.forEach(item=>{
-          const meta = CRYPTO.find(c => c.id === item.id);
-          if(!meta) return;
-          newRates[meta.code] = item.current_price;
-          newChanges[meta.code] = {
-            h1: item.price_change_percentage_1h_in_currency ?? null,
-            d1: item.price_change_percentage_24h_in_currency ?? null,
-            w1: item.price_change_percentage_7d_in_currency ?? null,
-            m1: item.price_change_percentage_30d_in_currency ?? null
-          };
-        });
-      }
-
-      rates = newRates;
-      changes = newChanges;
-
-      const now = new Date();
-      updatedText.textContent = 'Son kontrol: ' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
-
-      renderBoard();
-      renderDetailPanel();
-      renderConverter();
-      checkAlarms();
-      renderAlarmCurrentRate();
+      fiatOk = true;
     }catch(err){
-      updatedText.textContent = 'Veriler alınamadı, bağlantını kontrol et';
-    }finally{
-      setTimeout(()=> refreshBtn.classList.remove('spinning'), 700);
+      fiatOk = false;
     }
+  }
+
+  async function fetchCrypto(){
+    try{
+      const cryptoIds = CRYPTO.map(c=>c.id).join(',');
+      const keyParam = COINGECKO_API_KEY ? `&x_cg_demo_api_key=${COINGECKO_API_KEY}` : '';
+      const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=try&ids=${cryptoIds}&price_change_percentage=1h,24h,7d,30d${keyParam}`);
+      if(!res.ok) throw new Error('coingecko failed: ' + res.status);
+      const data = await res.json();
+      if(!Array.isArray(data)) throw new Error('coingecko bad payload');
+      data.forEach(item=>{
+        const meta = CRYPTO.find(c => c.id === item.id);
+        if(!meta) return;
+        prevRates[meta.code] = rates[meta.code];
+        rates[meta.code] = item.current_price;
+        changes[meta.code] = {
+          h1: item.price_change_percentage_1h_in_currency ?? null,
+          d1: item.price_change_percentage_24h_in_currency ?? null,
+          w1: item.price_change_percentage_7d_in_currency ?? null,
+          m1: item.price_change_percentage_30d_in_currency ?? null
+        };
+      });
+      cryptoOk = true;
+    }catch(err){
+      cryptoOk = false;
+    }
+  }
+
+  async function fetchRates(){
+    refreshBtn.classList.add('spinning');
+    prevRates = { ...rates };
+    await Promise.allSettled([fetchFiat(), fetchCrypto()]);
+
+    const now = new Date();
+    if(fiatOk && cryptoOk){
+      updatedText.textContent = 'Son kontrol: ' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+    }else if(fiatOk && !cryptoOk){
+      updatedText.textContent = 'Döviz güncel, kripto verisi alınamadı (' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) + ')';
+    }else if(!fiatOk && cryptoOk){
+      updatedText.textContent = 'Kripto güncel, döviz verisi alınamadı (' + now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) + ')';
+    }else{
+      updatedText.textContent = 'Veriler alınamadı, bağlantını kontrol et';
+    }
+
+    renderBoard();
+    renderDetailPanel();
+    renderConverter();
+    checkAlarms();
+    renderAlarmCurrentRate();
+    setTimeout(()=> refreshBtn.classList.remove('spinning'), 700);
   }
 
   function renderChangeChip(label, val){
